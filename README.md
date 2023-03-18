@@ -1,2 +1,2 @@
-# NumberMaze
-some little games about number
+# Number Maze Game
+Number Maze Game for A4 paper
