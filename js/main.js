@@ -51,7 +51,7 @@ function CreateA4(category) {
     m_drawBoard.ClearRect();
     if (category <= 3) {
         m_drawBoard.WriteText("数字扫雷", 8.0, 2.0, 1.4);
-    } else if (category <= 6) {
+    } else if (category <= 7) {
         m_drawBoard.WriteText("数字搭桥", 8.0, 2.0, 1.4);
     }
 
