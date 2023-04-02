@@ -53,6 +53,8 @@ function CreateA4(category) {
         m_drawBoard.WriteText("数字扫雷", 8.0, 2.0, 1.4);
     } else if (category <= 7) {
         m_drawBoard.WriteText("数字搭桥", 8.0, 2.0, 1.4);
+    } else if (category <= 9) {
+        m_drawBoard.WriteText("舒尔特表", 8.0, 2.0, 1.4);
     }
 
     if (category == 1) {
@@ -79,23 +81,37 @@ function CreateA4(category) {
         CreateOneBoxHaship(12.5, 7);
         CreateOneBoxHaship(2.5, 18);
         CreateOneBoxHaship(12.5, 18);
-    }else if (category == 5) {
+    } else if (category == 5) {
         m_BlockCellWidth = 1.3;
         m_hard = 4;
         CreateOneBoxHaship(1.5, 7);
         CreateOneBoxHaship(11.5, 7);
         CreateOneBoxHaship(1.5, 18);
         CreateOneBoxHaship(11.5, 18);
-    }else if (category == 6) {
+    } else if (category == 6) {
         m_BlockCellWidth = 1.15;
         m_hard = 5;
         CreateOneBoxHaship(5.5, 4.5);
         CreateOneBoxHaship(5.5, 17);
-    }else if (category == 7) {
+    } else if (category == 7) {
         m_BlockCellWidth = 1.15;
         m_hard = 6;
         CreateOneBoxHaship(5.5, 4.5);
         CreateOneBoxHaship(5.5, 17);
+    } else if (category == 8) {
+        //舒尔特表（Schulte Grid）
+        m_BlockCellWidth = 1.5;
+        m_hard = 1;
+        CreateOneBoxSchult(1.5, 7);
+        CreateOneBoxSchult(11.5, 7);
+        CreateOneBoxSchult(1.5, 18);
+        CreateOneBoxSchult(11.5, 18);
+    } else if (category == 9) {
+        //舒尔特表（Schulte Grid）
+        m_BlockCellWidth = 1.45;
+        m_hard = 2;
+        CreateOneBoxSchult(5.5, 4.5);
+        CreateOneBoxSchult(5.5, 17);
     }
 
     //贴图
@@ -119,6 +135,13 @@ function CreateOneBoxHaship(x, y) {
     //console.log(hashiData);
     //2.绘制
     DrawHashiPath(x, y, hashiData);
+}
+
+//生成一个舒尔特表
+function CreateOneBoxSchult(x, y) {
+    let chess1 = new CSchulteGrid();
+    chess1.SetHard(m_hard);
+    DrawSchultGrid(x, y, chess1);
 }
 
 //绘制数字地雷方格
@@ -156,8 +179,8 @@ function DrawHashiPath(x0, y0, chess1) {
     let x1 = x0;
     let y1 = y0;
     //绘制表格
-    for (let y = 0; y < chess1.numRow-1; y++) {
-        for (let x = 0; x < chess1.numCol-1; x++) {
+    for (let y = 0; y < chess1.numRow - 1; y++) {
+        for (let x = 0; x < chess1.numCol - 1; x++) {
             //1.绘制方格
             m_drawBoard.DrawSquare(x1, y1, m_BlockCellWidth, "grey", "dash");
             x1 = x1 + m_BlockCellWidth;
@@ -178,8 +201,8 @@ function DrawHashiPath(x0, y0, chess1) {
             let dx2 = x0 + m_BlockCellWidth * c2.x;
             let dy2 = y0 + m_BlockCellWidth * c2.y;
             //绘制圆
-            m_drawBoard.DrawCircle(dx1, dy1, m_BlockCellWidth * 0.2,0,0,"","white");
-            m_drawBoard.DrawCircle(dx2, dy2, m_BlockCellWidth * 0.2,0,0,"","white");
+            m_drawBoard.DrawCircle(dx1, dy1, m_BlockCellWidth * 0.2, 0, 0, "", "white");
+            m_drawBoard.DrawCircle(dx2, dy2, m_BlockCellWidth * 0.2, 0, 0, "", "white");
             //绘制桥数
             let str1 = c1.id + "";
             let str2 = c2.id + "";
@@ -192,6 +215,32 @@ function DrawHashiPath(x0, y0, chess1) {
     }
 
 }
+
+//绘制舒尔特表（Schulte Grid）
+function DrawSchultGrid(x0, y0, chess1) {
+    let x1 = x0;
+    let y1 = y0;
+    //显示地雷数
+    m_drawBoard.WriteText("缺数字______ ", x1, y1 - 0.6, 0.6);
+
+    for (let y = 0; y < chess1.numRow; y++) {
+        for (let x = 0; x < chess1.numCol; x++) {
+            //1.绘制方格
+            m_drawBoard.DrawSquare(x1, y1, m_BlockCellWidth);
+            //2.显示数字
+            let c1 = chess1.boxs[y][x];
+            if (c1.id > 0) {
+                let str1 = c1.id + "";
+                //3.绘制文字
+                m_drawBoard.WriteText(str1, x1 + 0.2 * m_BlockCellWidth, y1 + 0.7 * m_BlockCellWidth, 0.7);
+            }
+            x1 = x1 + m_BlockCellWidth;
+        }
+        y1 = y1 + m_BlockCellWidth;
+        x1 = x0;
+    }
+}
+
 
 //显示生成的题目图片，长按保存
 function ShowImageDlg() {

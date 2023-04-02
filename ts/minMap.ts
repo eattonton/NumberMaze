@@ -23,17 +23,40 @@ class Cell {
     }
 }
 
-//数字地雷
-class CMineMap {
+//棋盘的基础类
+class CChessGridBase{
     public numRow: number = 5;
     public numCol: number = 5;
     public hard: number = 2;
-    public numMine: number = 0;  //记录地雷数量
     //二维数组
     public boxs: Array<Array<Cell>> = new Array<Array<Cell>>();
 
     public constructor() {
 
+    }
+
+    //根据序号获得坐标
+    public GetRowColumn(idx: number): number[] {
+        let res = [0, 0];
+
+        res[0] = idx % this.numCol;
+        res[1] = Math.floor(idx / this.numCol);
+
+        return res;
+    }
+
+    //根据坐标获得序号
+    public GetCellIndex(x: number, y: number): number {
+        return this.numCol * y + x;
+    }
+}
+
+//数字地雷
+class CMineMap extends CChessGridBase{
+    public numMine: number = 0;  //记录地雷数量
+  
+    public constructor() {
+        super();
     }
 
     //创建棋盘数据
@@ -186,20 +209,7 @@ class CMineMap {
         }
     }
 
-    //根据序号获得坐标
-    public GetRowColumn(idx: number): number[] {
-        let res = [0, 0];
-
-        res[0] = idx % this.numCol;
-        res[1] = Math.floor(idx / this.numCol);
-
-        return res;
-    }
-
-    //根据坐标获得序号
-    public GetCellIndex(x: number, y: number): number {
-        return this.numCol * y + x;
-    }
+    
 
 }
 
@@ -407,12 +417,7 @@ class CHashiPath {
 }
 
 //数字连桥
-class CHashiMap {
-    public numRow: number = 5;
-    public numCol: number = 5;
-    public hard: number = 3;
-    //二维数组
-    public boxs: Array<Array<Cell>> = new Array<Array<Cell>>();
+class CHashiMap extends CChessGridBase{
     //记录路径
     public paths: Array<CHashiPath> = new Array<CHashiPath>();
 
@@ -421,7 +426,7 @@ class CHashiMap {
     }
 
     public constructor() {
-       
+       super();
     }
 
     //创建棋盘数据
@@ -643,3 +648,49 @@ class CHashiMap {
     }
 }
 
+
+//舒尔特方格
+class CSchulteGrid extends CChessGridBase{
+     
+    public constructor() {
+       super();
+    }
+
+    public SetHard(hard: number) {
+        this.hard = hard;
+        if (hard == 2) {
+            this.numRow = 7;
+            this.numCol = 7;
+        }  
+        for (let y = 0; y < this.numRow; y++) {
+            this.boxs.push([]);
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y].push(new Cell());
+                this.boxs[y][x].x = x;   //column
+                this.boxs[y][x].y = y;   //row
+            }
+        }
+
+        this.CreateCells();
+    }
+
+    public CreateCells(): void {
+        let num = this.numRow*this.numCol;
+        let arr1 = CArrayHelper.GetRandQueueInRange(num, 1, num);
+        //随机生成不需要显示的数
+        let arr2 = CArrayHelper.GetRandQueueInRange(this.hard, 1, num);
+        for (let y = 0; y < this.numRow; y++) {
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y][x].id = arr1[super.GetCellIndex(x,y)];   
+                if(arr2.indexOf(this.boxs[y][x].id) >= 0){
+                    this.boxs[y][x].id = -1;
+                }
+            }
+        }
+       
+    }
+
+}
+
+
+//数方

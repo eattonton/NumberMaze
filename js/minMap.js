@@ -12,15 +12,32 @@ class Cell {
         return c2;
     }
 }
-//数字地雷
-class CMineMap {
+//棋盘的基础类
+class CChessGridBase {
     constructor() {
         this.numRow = 5;
         this.numCol = 5;
         this.hard = 2;
-        this.numMine = 0; //记录地雷数量
         //二维数组
         this.boxs = new Array();
+    }
+    //根据序号获得坐标
+    GetRowColumn(idx) {
+        let res = [0, 0];
+        res[0] = idx % this.numCol;
+        res[1] = Math.floor(idx / this.numCol);
+        return res;
+    }
+    //根据坐标获得序号
+    GetCellIndex(x, y) {
+        return this.numCol * y + x;
+    }
+}
+//数字地雷
+class CMineMap extends CChessGridBase {
+    constructor() {
+        super();
+        this.numMine = 0; //记录地雷数量
     }
     //创建棋盘数据
     CreateChessData(hard) {
@@ -156,17 +173,6 @@ class CMineMap {
                 }
             }
         }
-    }
-    //根据序号获得坐标
-    GetRowColumn(idx) {
-        let res = [0, 0];
-        res[0] = idx % this.numCol;
-        res[1] = Math.floor(idx / this.numCol);
-        return res;
-    }
-    //根据坐标获得序号
-    GetCellIndex(x, y) {
-        return this.numCol * y + x;
     }
 }
 //数字连桥路径
@@ -352,16 +358,12 @@ class CHashiPath {
     }
 }
 //数字连桥
-class CHashiMap {
+class CHashiMap extends CChessGridBase {
     get CountPath() {
         return this.paths.length;
     }
     constructor() {
-        this.numRow = 5;
-        this.numCol = 5;
-        this.hard = 3;
-        //二维数组
-        this.boxs = new Array();
+        super();
         //记录路径
         this.paths = new Array();
     }
@@ -577,3 +579,40 @@ class CHashiMap {
         }
     }
 }
+//舒尔特方格
+class CSchulteGrid extends CChessGridBase {
+    constructor() {
+        super();
+    }
+    SetHard(hard) {
+        this.hard = hard;
+        if (hard == 2) {
+            this.numRow = 7;
+            this.numCol = 7;
+        }
+        for (let y = 0; y < this.numRow; y++) {
+            this.boxs.push([]);
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y].push(new Cell());
+                this.boxs[y][x].x = x; //column
+                this.boxs[y][x].y = y; //row
+            }
+        }
+        this.CreateCells();
+    }
+    CreateCells() {
+        let num = this.numRow * this.numCol;
+        let arr1 = CArrayHelper.GetRandQueueInRange(num, 1, num);
+        //随机生成不需要显示的数
+        let arr2 = CArrayHelper.GetRandQueueInRange(this.hard, 1, num);
+        for (let y = 0; y < this.numRow; y++) {
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y][x].id = arr1[super.GetCellIndex(x, y)];
+                if (arr2.indexOf(this.boxs[y][x].id) >= 0) {
+                    this.boxs[y][x].id = -1;
+                }
+            }
+        }
+    }
+}
+//数方
