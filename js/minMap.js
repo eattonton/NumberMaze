@@ -616,3 +616,449 @@ class CSchulteGrid extends CChessGridBase {
     }
 }
 //数方
+class CShiKaKuGrid extends CChessGridBase {
+    constructor() {
+        super();
+        this.chessParts = new Array();
+        this.chessRanges = new Array();
+        for (let y = 0; y < this.numRow; y++) {
+            this.boxs.push([]);
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y].push(new Cell());
+                this.boxs[y][x].x = x; //column
+                this.boxs[y][x].y = y; //row
+            }
+        }
+    }
+    CreateChessDataWithSplit() {
+        //1.定义范围
+        let rang1 = new CRange(0, 0, this.numCol - 1, this.numRow - 1);
+        //2.分割范围
+        this.SplitChess(rang1, 5);
+        //3.随机合并范围
+        //console.log(this.chessRanges);
+        for (let i = 0; i < this.chessRanges.length; i++) {
+            this.chessRanges[i].id = i + 1;
+        }
+    }
+    //按照范围分割范围
+    SplitChess(rang1, n) {
+        if (n <= 0) {
+            this.chessRanges.push(rang1);
+        }
+        else {
+            let arr1 = rang1.SplitAlong();
+            for (let rang2 of arr1) {
+                this.SplitChess(rang2, n - 1);
+            }
+        }
+    }
+    GetRangeByPosition(x0, y0) {
+        for (let i = 0; i < this.chessRanges.length; i++) {
+            if (this.chessRanges[i].CheckIn(x0, y0)) {
+                return this.chessRanges[i];
+            }
+        }
+        return null;
+    }
+    //通过放入part生成棋盘数据
+    CreateChessDataWithPart() {
+        //2.生成一个随机数组
+        let partIdx = [0, 1, 2];
+        for (let i = 0; i < 64; i++) {
+            let partIdx2 = CArrayHelper.GetRandQueue(partIdx, partIdx.length);
+            //let partIdx2 =[3,4];
+            for (let j = 0; j < partIdx2.length; j++) {
+                //3.获得一个part
+                let part0 = CPartFactory.GetPart(partIdx2[j]);
+                part0.id = this.chessParts.length;
+                //4.指定位置填充
+                let arrPos = this.GetEmptyPosition();
+                let chessPosX = arrPos[0];
+                let chessPosY = arrPos[1];
+                if (this.insertPart(part0, chessPosX, chessPosY)) {
+                    //判断是否存在无效的空格
+                    if (this.CheckInvalidCell()) {
+                        this.removePart(part0, chessPosX, chessPosY);
+                    }
+                    else {
+                        part0.x0 = chessPosX;
+                        part0.y0 = chessPosY;
+                        this.chessParts.push(part0);
+                        //只要能插入 就进入下一个
+                        break;
+                    }
+                }
+            }
+        }
+        //检查是否还有空格
+        if (this.ExistEmptyPosition()) {
+            //  return this.CreateChessData();
+        }
+    }
+    //row = y, column = x插入零件 
+    insertPart(p1, c, r) {
+        let x = c;
+        let y = r;
+        //1.判断是否能够插入
+        for (let i = 0; i < p1.Count; i++) {
+            let cell1 = p1.items[i];
+            //填充到指定位置的格子
+            let x2 = x + cell1.x;
+            let y2 = y + cell1.y;
+            if (x2 < 0 || x2 >= this.numCol)
+                return false;
+            if (y2 < 0 || y2 >= this.numRow)
+                return false;
+            if (this.boxs[y2][x2].id >= 0)
+                return false;
+        }
+        //2.修改指定位置的id值
+        for (let i = 0; i < p1.Count; i++) {
+            let cell1 = p1.items[i];
+            //填充到指定位置的格子
+            let x2 = x + cell1.x;
+            let y2 = y + cell1.y;
+            this.boxs[y2][x2].id = p1.id;
+            this.boxs[y2][x2].id2 = cell1.id2;
+        }
+        return true;
+    }
+    //去掉添加的零件
+    removePart(p1, c, r) {
+        let x = c;
+        if (x == undefined)
+            x = p1.x0;
+        let y = r;
+        if (y == undefined)
+            y = p1.y0;
+        for (let i = 0; i < p1.Count; i++) {
+            let cell1 = p1.items[i];
+            //填充到指定位置的格子
+            let x2 = x + cell1.x;
+            let y2 = y + cell1.y;
+            this.boxs[y2][x2].id = -1;
+        }
+    }
+    //获得可以插入的位置
+    GetEmptyPosition() {
+        for (let y = 0; y < this.numRow; y++) {
+            for (let x = 0; x < this.numCol; x++) {
+                if (this.boxs[y][x].id == -1) {
+                    return [x, y];
+                }
+            }
+        }
+        return [0, 0];
+    }
+    //获得在X方向上空格的位置
+    GetEmptyEndX(x0, y0) {
+        let iRes = -1;
+        if (y0 >= 0 && y0 < this.numRow) {
+            for (let x = x0; x < this.numCol; x++) {
+                if (this.boxs[y0][x].id != -1) {
+                    break;
+                }
+                iRes = x;
+            }
+        }
+        return iRes;
+    }
+    //获得在y方向上空格的位置
+    GetEmptyEndY(x0, y0) {
+        let iRes = -1;
+        if (x0 >= 0 && x0 < this.numCol) {
+            for (let y = y0; y < this.numRow; y++) {
+                if (this.boxs[y][x0].id != -1) {
+                    break;
+                }
+                iRes = y;
+            }
+        }
+        return iRes;
+    }
+    //判断是否存在空格
+    ExistEmptyPosition() {
+        for (let y = 0; y < this.numRow; y++) {
+            for (let x = 0; x < this.numCol; x++) {
+                if (this.boxs[y][x].id == -1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    //判断是否存在无效的空格
+    CheckInvalidCell() {
+        for (let y = 0; y < this.numRow; y++) {
+            for (let x = 0; x < this.numCol; x++) {
+                if (this.boxs[y][x].id == -1) {
+                    let arr1 = this.GetNearEmptyCells(x, y);
+                    if (arr1.length == 0) {
+                        //存在无效的单个格子
+                        return true;
+                    }
+                    else if (arr1.length == 1) {
+                        let xy2 = this.GetRowColumn(arr1[0]);
+                        let arr2 = this.GetNearEmptyCells(xy2[0], xy2[1]);
+                        let pos1 = this.GetCellIndex(x, y);
+                        if (arr2.length == 1 && arr2[0] == pos1) {
+                            //连续连个格式封闭
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    GetNearEmptyCells(x, y) {
+        let arr1 = [];
+        //判断是否存在无效空格 四周不存在 -1
+        let pt1 = this.GetPosUp(x, y);
+        if (pt1.length >= 2 && this.boxs[pt1[1]][pt1[0]].id == -1) {
+            arr1.push(this.GetCellIndex(pt1[0], pt1[1]));
+        }
+        pt1 = this.GetPosDown(x, y);
+        if (pt1.length >= 2 && this.boxs[pt1[1]][pt1[0]].id == -1) {
+            arr1.push(this.GetCellIndex(pt1[0], pt1[1]));
+        }
+        pt1 = this.GetPosRight(x, y);
+        if (pt1.length >= 2 && this.boxs[pt1[1]][pt1[0]].id == -1) {
+            arr1.push(this.GetCellIndex(pt1[0], pt1[1]));
+        }
+        pt1 = this.GetPosLeft(x, y);
+        if (pt1.length >= 2 && this.boxs[pt1[1]][pt1[0]].id == -1) {
+            arr1.push(this.GetCellIndex(pt1[0], pt1[1]));
+        }
+        return arr1;
+    }
+    GetPosUp(x, y) {
+        if (y + 1 < this.numRow) {
+            return [x, y + 1];
+        }
+        return [];
+    }
+    GetPosDown(x, y) {
+        if (y - 1 >= 0) {
+            return [x, y - 1];
+        }
+        return [];
+    }
+    GetPosRight(x, y) {
+        if (x + 1 < this.numCol) {
+            return [x + 1, y];
+        }
+        return [];
+    }
+    GetPosLeft(x, y) {
+        if (x - 1 >= 0) {
+            return [x - 1, y];
+        }
+        return [];
+    }
+}
+//矩形范围的表示
+class CRange {
+    get Count() {
+        let d1 = Math.abs(this.x2 - this.x1) + 1;
+        let d2 = Math.abs(this.y2 - this.y1) + 1;
+        return d1 * d2;
+    }
+    constructor(x1, y1, x2, y2) {
+        this.id = -1;
+        this.x1 = x1;
+        this.y1 = y1;
+        this.x2 = x2;
+        this.y2 = y2;
+    }
+    SplitAlong() {
+        let arr1 = new Array();
+        let idx = CArrayHelper.RandomInt(0, 1);
+        let idx2 = [idx, 1 - idx];
+        for (let i of idx2) {
+            if (i == 0) {
+                arr1 = this.SplitAlongX();
+                if (arr1.length > 0) {
+                    break;
+                }
+            }
+            else if (i == 1) {
+                arr1 = this.SplitAlongY();
+                if (arr1.length > 0) {
+                    break;
+                }
+            }
+        }
+        if (arr1.length == 0) {
+            arr1.push(new CRange(this.x1, this.y1, this.x2, this.y2));
+        }
+        return arr1;
+    }
+    //沿X方向进行分割
+    SplitAlongX() {
+        let arr1 = new Array();
+        if (this.x1 < this.x2) {
+            if ((this.x2 - this.x1) == 1) {
+                let rang1 = new CRange(this.x1, this.y1, this.x1, this.y2);
+                let rang2 = new CRange(this.x2, this.y1, this.x2, this.y2);
+                if (CRange.CheckValid(rang1) && CRange.CheckValid(rang2)) {
+                    arr1.push(rang1);
+                    arr1.push(rang2);
+                }
+            }
+            else {
+                let splitx = CArrayHelper.RandomInt(this.x1, this.x2 - 1);
+                let rang1 = new CRange(this.x1, this.y1, splitx, this.y2);
+                let rang2 = new CRange(splitx + 1, this.y1, this.x2, this.y2);
+                if (CRange.CheckValid(rang1) && CRange.CheckValid(rang2)) {
+                    arr1.push(rang1);
+                    arr1.push(rang2);
+                }
+            }
+        }
+        return arr1;
+    }
+    //沿Y方向进行分割
+    SplitAlongY() {
+        let arr1 = new Array();
+        if (this.y1 < this.y2) {
+            if ((this.y2 - this.y1) == 1) {
+                let rang1 = new CRange(this.x1, this.y1, this.x2, this.y1);
+                let rang2 = new CRange(this.x1, this.y2, this.x2, this.y2);
+                if (CRange.CheckValid(rang1) && CRange.CheckValid(rang2)) {
+                    arr1.push(rang1);
+                    arr1.push(rang2);
+                }
+            }
+            else {
+                let splity = CArrayHelper.RandomInt(this.y1, this.y2 - 1);
+                let rang1 = new CRange(this.x1, this.y1, this.x2, splity);
+                let rang2 = new CRange(this.x1, splity + 1, this.x2, this.y2);
+                if (CRange.CheckValid(rang1) && CRange.CheckValid(rang2)) {
+                    arr1.push(rang1);
+                    arr1.push(rang2);
+                }
+            }
+        }
+        return arr1;
+    }
+    //判断范围的有效性
+    static CheckValid(rang1) {
+        if ((rang1.Count) <= 1) {
+            return false;
+        }
+        return true;
+    }
+    //判断是否在内部
+    CheckIn(x0, y0) {
+        if (x0 >= this.x1 && x0 <= this.x2 && y0 >= this.y1 && y0 <= this.y2) {
+            return true;
+        }
+        return false;
+    }
+    //获得在方格内部的序号
+    GetInsideNumber(x0, y0) {
+        if (this.CheckIn(x0, y0) == false)
+            return -1;
+        let iRes = 0;
+        for (let y = this.y1; y <= this.y2; y++) {
+            for (let x = this.x1; x <= this.x2; x++) {
+                if (x == x0 && y == y0) {
+                    return iRes;
+                }
+                ++iRes;
+            }
+        }
+        return iRes;
+    }
+}
+//零件
+class CPart {
+    get Count() {
+        return this.items.length;
+    }
+    constructor() {
+        //记录单元
+        this.items = new Array();
+        this.x0 = 0;
+        this.y0 = 0;
+    }
+    Add(x, y, id2) {
+        this.items.push(new Cell);
+        this.items[this.items.length - 1].x = x;
+        this.items[this.items.length - 1].y = y;
+        this.items[this.items.length - 1].id = this.id;
+        this.items[this.items.length - 1].id2 = id2; //写文字的序号
+    }
+    //根据坐标查找
+    Find(x, y) {
+        return null;
+    }
+    get minx() {
+        let arr1 = this.items.map(item => { return item.x; });
+        return Math.min.apply(null, arr1);
+    }
+    get miny() {
+        let arr1 = this.items.map(item => { return item.y; });
+        return Math.min.apply(null, arr1);
+    }
+    get maxx() {
+        let arr1 = this.items.map(item => { return item.x; });
+        return Math.max.apply(null, arr1);
+    }
+    get maxy() {
+        let arr1 = this.items.map(item => { return item.y; });
+        return Math.max.apply(null, arr1);
+    }
+}
+//零件生成类
+class CPartFactory {
+    constructor() {
+    }
+    static GetPart(idx) {
+        switch (idx) {
+            case 0:
+                return CPartFactory.part0();
+            case 1:
+                return CPartFactory.part1();
+            case 2:
+                return CPartFactory.part2();
+        }
+        return null;
+    }
+    //----
+    static part0() {
+        let p1 = new CPart();
+        p1.id = 0;
+        p1.Add(0, 0, 0);
+        p1.Add(1, 0, 1);
+        p1.Add(2, 0, 2);
+        p1.Add(3, 0, 3);
+        return p1;
+    }
+    //-
+    //-
+    //-
+    //-
+    static part1() {
+        let p1 = new CPart();
+        p1.id = 1;
+        p1.Add(0, 0, 0);
+        p1.Add(0, 1, 1);
+        p1.Add(0, 2, 2);
+        p1.Add(0, 3, 3);
+        return p1;
+    }
+    //--
+    //--
+    static part2() {
+        let p1 = new CPart();
+        p1.id = 2;
+        p1.Add(0, 0, 0);
+        p1.Add(1, 0, 1);
+        p1.Add(0, 1, 3);
+        p1.Add(1, 1, 2);
+        return p1;
+    }
+}

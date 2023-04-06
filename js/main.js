@@ -55,6 +55,8 @@ function CreateA4(category) {
         m_drawBoard.WriteText("数字搭桥", 8.0, 2.0, 1.4);
     } else if (category <= 9) {
         m_drawBoard.WriteText("舒尔特表", 8.0, 2.0, 1.4);
+    }else if (category <= 12) {
+        m_drawBoard.WriteText("数 方", 8.0, 2.0, 1.4);
     }
 
     if (category == 1) {
@@ -112,6 +114,14 @@ function CreateA4(category) {
         m_hard = 2;
         CreateOneBoxSchult(5.5, 4.5);
         CreateOneBoxSchult(5.5, 17);
+    }else if (category == 10) {
+        //数方
+        m_BlockCellWidth = 1.5;
+        m_hard = 1;
+        CreateOneBoxShiKaKu(1.5, 7);
+        CreateOneBoxShiKaKu(11.5, 7);
+        CreateOneBoxShiKaKu(1.5, 18);
+        CreateOneBoxShiKaKu(11.5, 18);
     }
 
     //贴图
@@ -142,6 +152,15 @@ function CreateOneBoxSchult(x, y) {
     let chess1 = new CSchulteGrid();
     chess1.SetHard(m_hard);
     DrawSchultGrid(x, y, chess1);
+}
+
+//生成一个数方
+function CreateOneBoxShiKaKu(x, y) {
+    //1.生成棋盘
+    let chess1 = new CShiKaKuGrid();
+    chess1.CreateChessDataWithSplit();
+    //3.绘制表格
+    DrawShiKaku(x, y, chess1);
 }
 
 //绘制数字地雷方格
@@ -234,6 +253,41 @@ function DrawSchultGrid(x0, y0, chess1) {
                 //3.绘制文字
                 m_drawBoard.WriteText(str1, x1 + 0.2 * m_BlockCellWidth, y1 + 0.7 * m_BlockCellWidth, 0.7);
             }
+            x1 = x1 + m_BlockCellWidth;
+        }
+        y1 = y1 + m_BlockCellWidth;
+        x1 = x0;
+    }
+}
+
+//绘制数方Shikaku
+function DrawShiKaku(x0, y0, chess1){
+    let x1 = x0;
+    let y1 = y0;
+    //记录文字的绘制顺序
+    let showSeq = {};
+    for (let y = 0; y < chess1.numRow; y++) {
+        for (let x = 0; x < chess1.numCol; x++) {
+            //1.绘制方格
+            m_drawBoard.DrawSquare(x1, y1, m_BlockCellWidth);
+            let str1 = "";
+            //2.获得所在range
+            let rang1 = chess1.GetRangeByPosition(x, y);
+            //3.获得当前位置在rang1中的序号
+            let idx1 = rang1.GetInsideNumber(x,y);
+            //4.随机一个序号，用于判断是否显示
+            if(showSeq[rang1.id] == undefined){
+               showSeq[rang1.id] = CArrayHelper.RandomInt(0, rang1.Count-1);
+            } 
+            let idx2 = showSeq[rang1.id];
+            //5.显示占位的数量
+            str1 = rang1.Count + "";
+            //6.是否显示
+            if(idx1 != idx2){
+                str1 = "";
+            }
+            //7.绘制文字
+            m_drawBoard.WriteText(str1, x1 + 0.2 * m_BlockCellWidth, y1 + 0.7 * m_BlockCellWidth, 0.7);
             x1 = x1 + m_BlockCellWidth;
         }
         y1 = y1 + m_BlockCellWidth;
