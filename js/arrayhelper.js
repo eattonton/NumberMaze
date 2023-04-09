@@ -10,9 +10,9 @@ class CArrayHelper {
         let arr = [];
         // 在此处补全代码
         for (let i = 0; i < n; i++) {
-            let number = CArrayHelper.RandomInt(min, max);
-            if (arr.indexOf(number) == -1) { //去除重复项
-                arr.push(number);
+            let num1 = CArrayHelper.RandomInt(min, max);
+            if (arr.indexOf(num1) == -1) { //去除重复项
+                arr.push(num1);
             }
             else {
                 i--;
@@ -29,12 +29,12 @@ class CArrayHelper {
                 array[i] = i;
             }
         }
-        let res = [], random;
+        let res = [], random1;
         let array2 = [...array];
         while (array2.length > 0) {
-            random = Math.floor(Math.random() * array2.length);
-            res.push(array2[random]);
-            array2.splice(random, 1);
+            random1 = Math.floor(Math.random() * array2.length);
+            res.push(array2[random1]);
+            array2.splice(random1, 1);
         }
         return res;
     }

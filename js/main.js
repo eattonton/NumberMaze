@@ -45,6 +45,7 @@ function CreateA4(category) {
     }
 
     var toastDlg = new Toast({
+
         text: "生成中"
     });
     toastDlg.Show();
