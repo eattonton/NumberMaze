@@ -630,16 +630,45 @@ class CShiKaKuGrid extends CChessGridBase {
             }
         }
     }
-    CreateChessDataWithSplit() {
+    SetHard(hard) {
+        this.hard = hard;
+        let splitNumber = 5;
+        if (this.hard == 3) {
+            this.numCol = 7;
+            this.numRow = 7;
+        }
+        else if (this.hard >= 4) {
+            this.numCol = 12;
+            this.numRow = 12;
+            splitNumber = 7;
+        }
+        this.CreateChessDataWithSplit(splitNumber);
+    }
+    CreateChessDataWithSplit(splitNum) {
         //1.定义范围
         let rang1 = new CRange(0, 0, this.numCol - 1, this.numRow - 1);
         //2.分割范围
-        this.SplitChess(rang1, 5);
-        //3.随机合并范围
-        //console.log(this.chessRanges);
+        this.SplitChess(rang1, splitNum);
+        //3.赋值id
         for (let i = 0; i < this.chessRanges.length; i++) {
             this.chessRanges[i].id = i + 1;
         }
+        if (this.hard == 1)
+            return;
+        //4.随机合并范围
+        for (let i = 0; i < this.chessRanges.length; i++) {
+            let rang3 = null;
+            let rang1 = this.chessRanges[i];
+            let i2 = rang1.FindConnectedBlock(this.chessRanges, rang3);
+            if (i2 >= 0 && rang3 != null) {
+                //找到合并的对象
+                rang3.id = rang1.id;
+                this.chessRanges[i] = rang3;
+                this.chessRanges.splice(i2, 1);
+                console.log(rang3);
+            }
+        }
+        // console.log(this.chessRanges);
     }
     //按照范围分割范围
     SplitChess(rang1, n) {
@@ -942,6 +971,84 @@ class CRange {
             }
         }
         return arr1;
+    }
+    //查找相邻的Range
+    FindConnectedBlock(arr2, rang3) {
+        let idx = CArrayHelper.GetRandQueueInRange(arr2.length, 0, arr2.length - 1);
+        for (let i = 0; i < idx.length; i++) {
+            let rang2 = arr2[i];
+            if (this.id != rang2.id) {
+                //不同类的range进行相邻比较
+                if (CRange.MergeConnectedBlock(this, rang2, rang3)) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+    //不同方向上尝试合并单元格
+    static MergeConnectedBlock(rang1, rang2, rang3) {
+        let idxs = CArrayHelper.GetRandQueue(null, 4);
+        let iRes = false;
+        rang3 = null;
+        for (let i of idxs) {
+            if (i == 0) {
+                iRes = CRange.CheckConnectedUp(rang1, rang2, rang3);
+            }
+            else if (i == 1) {
+                iRes = CRange.CheckConnectedDown(rang1, rang2, rang3);
+            }
+            else if (i == 2) {
+                iRes = CRange.CheckConnectedLeft(rang1, rang2, rang3);
+            }
+            else if (i == 3) {
+                iRes = CRange.CheckConnectedRight(rang1, rang2, rang3);
+            }
+            if (iRes) {
+                break;
+            }
+        }
+        return iRes;
+    }
+    //rang2 在 rang1 上面
+    static CheckConnectedUp(rang1, rang2, rang3) {
+        if (rang1.x1 == rang2.x1 && rang1.x2 == rang2.x2) {
+            if ((rang2.y1 - rang1.y2) == 1) {
+                rang3 = new CRange(rang1.x1, rang1.y1, rang1.x2, rang2.y2);
+                return true;
+            }
+        }
+        return false;
+    }
+    //rang2 在 rang1 下面
+    static CheckConnectedDown(rang1, rang2, rang3) {
+        if (rang1.x1 == rang2.x1 && rang1.x2 == rang2.x2) {
+            if ((rang2.y2 - rang1.y1) == -1) {
+                rang3 = new CRange(rang1.x1, rang2.y1, rang1.x2, rang1.y2);
+                return true;
+            }
+        }
+        return false;
+    }
+    //rang2 在 rang1 左面
+    static CheckConnectedLeft(rang1, rang2, rang3) {
+        if (rang1.y1 == rang2.y1 && rang1.y2 == rang2.y2) {
+            if ((rang2.x2 - rang1.x1) == -1) {
+                rang3 = new CRange(rang2.x1, rang1.y1, rang1.x2, rang2.y2);
+                return true;
+            }
+        }
+        return false;
+    }
+    //rang2 在 rang1 右面
+    static CheckConnectedRight(rang1, rang2, rang3) {
+        if (rang1.y1 == rang2.y1 && rang1.y2 == rang2.y2) {
+            if ((rang2.x1 - rang1.x2) == 1) {
+                rang3 = new CRange(rang1.x1, rang1.y1, rang2.x2, rang2.y2);
+                return true;
+            }
+        }
+        return false;
     }
     //判断范围的有效性
     static CheckValid(rang1) {
