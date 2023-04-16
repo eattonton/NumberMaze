@@ -1,3 +1,10 @@
+enum CellDirection {
+    up = 0,
+    down = 1,
+    left = 2,
+    right = 3
+}
+
 //单元
 class Cell {
     public id: number;
@@ -14,7 +21,7 @@ class Cell {
     public left: boolean;
     public right: boolean;
     //是否显示
-    public show:boolean;
+    public show: boolean;
 
     public constructor() {
         this.id = -1;
@@ -1373,9 +1380,9 @@ class CSlitherlinkGrid extends CChessGridBase {
         this.hard = hard;
         if (this.hard == 1) {
             this.numLoops = this.numRow * this.numCol / 5;
-        }else if (this.hard == 2) {
+        } else if (this.hard == 2) {
             this.numLoops = this.numRow * this.numCol / 2;
-        }else if (this.hard == 3) {
+        } else if (this.hard == 3) {
             this.numCol = 7;
             this.numRow = 7;
             this.numLoops = this.numRow * this.numCol / 2;
@@ -1425,19 +1432,32 @@ class CSlitherlinkGrid extends CChessGridBase {
 
             }
         }
+        //获得非路径区域
+        let arrRangeNonPath = this.GetNotPathRangeCells();
+        for (let arr2 of arrRangeNonPath) {
+            if (this.CheckInnerRangeCell(arr2)) {
+                //console.log(arr2);
+                //内部的点改成路径点
+                for (let c2 of arr2) {
+                    c2.id = 1;
+                    c2.id2 = 0;
+                }
+            }
+        }
+
         //统计边数 含路径内 和 路径外
         let arr1 = [];
         for (let row = 0; row < this.numRow; row++) {
             for (let col = 0; col < this.numCol; col++) {
-                let c1:Cell = this.boxs[row][col];
+                let c1: Cell = this.boxs[row][col];
                 c1.id2 = 0;
                 this.CountEdges(c1);
-                if(c1.id != -1){
+                if (c1.id != -1) {
                     //路径内的
                     arr1.push(c1);
-                }else{
+                } else {
                     //路径外的
-                    if(c1.id2 > 0){
+                    if (c1.id2 > 0) {
                         arr1.push(c1);
                     }
                 }
@@ -1446,7 +1466,7 @@ class CSlitherlinkGrid extends CChessGridBase {
 
         //随机获得可以显示的格式
         let arr2 = CArrayHelper.GetRandQueue(arr1, this.numLoops);
-        for(let c1 of arr2){
+        for (let c1 of arr2) {
             c1['show'] = true;
         }
 
@@ -1475,48 +1495,172 @@ class CSlitherlinkGrid extends CChessGridBase {
             return neighbor;
         }
     }
- 
+
+    //判断非路径区域是否
+    private CheckInnerRangeCell(arr1: Array<Cell>): boolean {
+        for (let c1 of arr1) {
+            //只要有一个存在边缘 就表示不是 在内部
+            let c2up: Cell = this.NextCell(c1, CellDirection.up);
+            let c2down: Cell = this.NextCell(c1, CellDirection.down);
+            let c2right: Cell = this.NextCell(c1, CellDirection.right);
+            let c2left: Cell = this.NextCell(c1, CellDirection.left);
+            if (c2up == null || c2down == null || c2right == null || c2left == null) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    //获得非路径区域的单元格
+    private GetNotPathRangeCells(): Array<Array<Cell>> {
+        let arr1: Array<Array<Cell>> = [];
+        let bfind: boolean = false;
+        for (let row = 0; row < this.numRow; row++) {
+            for (let col = 0; col < this.numCol; col++) {
+                let c1: Cell = this.boxs[row][col];
+                bfind = false;
+                if (c1.id == -1) {
+                    //1.在arr1数组中查找 是否已经在存在的区块中 
+                    for (let arr2 of arr1) {
+                        if (arr2.indexOf(c1) >= 0) {
+                            bfind = true;
+                            break;
+                        }
+                    }
+                    //2.如果不存在 就找到 这个区域
+                    if (bfind == false) {
+                        let arr2: Array<Cell> = [];
+                        this.GetRangeCells(c1, arr2);
+                        arr1.push(arr2);
+                    }
+                }
+
+            }
+
+        }
+
+        return arr1;
+    }
+
+    //获得跟 c1.id一样的一篇区域
+    private GetRangeCells(c1: Cell, arr1: Array<Cell>) {
+        if (arr1.indexOf(c1) < 0) {
+            arr1.push(c1);
+        }
+        //获得周围的单元格
+        let c2up: Cell = this.NextCell(c1, CellDirection.up);
+        let c2down: Cell = this.NextCell(c1, CellDirection.down);
+        let c2right: Cell = this.NextCell(c1, CellDirection.right);
+        let c2left: Cell = this.NextCell(c1, CellDirection.left);
+
+        if (c2up && c2up.id == c1.id && arr1.indexOf(c2up) < 0) {
+            this.GetRangeCells(c2up, arr1);
+        }
+        if (c2down && c2down.id == c1.id && arr1.indexOf(c2down) < 0) {
+            this.GetRangeCells(c2down, arr1);
+        }
+        if (c2right && c2right.id == c1.id && arr1.indexOf(c2right) < 0) {
+            this.GetRangeCells(c2right, arr1);
+        }
+        if (c2left && c2left.id == c1.id && arr1.indexOf(c2left) < 0) {
+            this.GetRangeCells(c2left, arr1);
+        }
+
+
+    }
+
+    private NextCell(c1: Cell, eDir: CellDirection): Cell {
+        if (eDir == CellDirection.up) {
+            return this.NextCellUp(c1);
+        } else if (eDir == CellDirection.down) {
+            return this.NextCellDown(c1);
+        } else if (eDir == CellDirection.right) {
+            return this.NextCellRight(c1);
+        } else if (eDir == CellDirection.left) {
+            return this.NextCellLeft(c1);
+        }
+        return null;
+    }
+
+    //获得up 单元格
+    private NextCellUp(c1: Cell): Cell {
+        if (c1.y < this.numRow - 1) {
+            return this.boxs[c1.y + 1][c1.x];
+        }
+
+        return null;
+    }
+    //获得down 单元格
+    private NextCellDown(c1: Cell): Cell {
+        if (c1.y > 0) {
+            return this.boxs[c1.y - 1][c1.x];
+        }
+
+        return null;
+    }
+
+    //获得right 单元格
+    private NextCellRight(c1: Cell): Cell {
+        if (c1.x < this.numCol - 1) {
+            return this.boxs[c1.y][c1.x + 1];
+        }
+
+        return null;
+    }
+    //获得left 单元格
+    private NextCellLeft(c1: Cell): Cell {
+        if (c1.x > 0) {
+            return this.boxs[c1.y][c1.x - 1];
+        }
+
+        return null;
+    }
+
     //统计单元格所包含的边数
     private CountEdges(c1: Cell) {
+        let c2up: Cell = this.NextCell(c1, CellDirection.up);
+        let c2down: Cell = this.NextCell(c1, CellDirection.down);
+        let c2right: Cell = this.NextCell(c1, CellDirection.right);
+        let c2left: Cell = this.NextCell(c1, CellDirection.left);
         if (c1.id == -1) {
             //非路径中的边数判断
             //left
-            if (c1.x > 0 && this.boxs[c1.y][c1.x - 1].id != -1) {
+            if (c2left && c2left.id != -1) {
                 ++c1.id2;
             }
             //right
-            if (c1.x < this.numCol - 1 && this.boxs[c1.y][c1.x + 1].id != -1) {
+            if (c2right && c2right.id != -1) {
                 ++c1.id2;
             }
             //down
-            if (c1.y > 0 && this.boxs[c1.y - 1][c1.x].id != -1) {
+            if (c2down && c2down.id != -1) {
                 ++c1.id2;
             }
             //up
-            if (c1.y < this.numRow - 1 && this.boxs[c1.y + 1][c1.x].id != -1) {
+            if (c2up && c2up.id != -1) {
                 ++c1.id2;
             }
 
-            if(c1.id2 == 4){
+            if (c1.id2 == 4) {
                 //表示此格在封闭的内部，为无效
                 c1.id2 = -1;
             }
-        }else{
+        } else {
             //路径中的边数判断
             //left
-            if (c1.x <= 0 || this.boxs[c1.y][c1.x - 1].id == -1) {
+            if (c1.x <= 0 || (c2left && c2left.id == -1)) {
                 ++c1.id2;
             }
             //right
-            if (c1.x >= this.numCol - 1 || this.boxs[c1.y][c1.x + 1].id == -1) {
+            if (c1.x >= this.numCol - 1 || (c2right && c2right.id == -1)) {
                 ++c1.id2;
             }
             //down
-            if (c1.y <= 0 || this.boxs[c1.y - 1][c1.x].id == -1) {
+            if (c1.y <= 0 || (c2down && c2down.id == -1)) {
                 ++c1.id2;
             }
             //up
-            if (c1.y >= this.numRow - 1 || this.boxs[c1.y + 1][c1.x].id == -1) {
+            if (c1.y >= this.numRow - 1 || (c2up && c2up.id == -1)) {
                 ++c1.id2;
             }
         }

@@ -369,12 +369,13 @@ function DrawSlitherlink(x0, y0, chess1) {
             let idx2 = chess1.boxs[y][x].id2;
             let bShow = chess1.boxs[y][x].show;
             //5.显示占位的数量
-            str1 = "";
-
             //7.绘制文字
             if(bShow){
                 str1 = idx2 + "";
-            } 
+            }
+            // if(idx1 == -1){
+            //     str1 = idx1 + "";
+            // }
             //绘制 
             if(str1 != ""){
                 m_drawBoard.WriteText(str1, x1 + 0.18 * m_BlockCellWidth, y1 + 0.7 * m_BlockCellWidth, 0.65);
