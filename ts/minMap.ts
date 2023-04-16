@@ -1496,6 +1496,11 @@ class CSlitherlinkGrid extends CChessGridBase {
             if (c1.y < this.numRow - 1 && this.boxs[c1.y + 1][c1.x].id != -1) {
                 ++c1.id2;
             }
+
+            if(c1.id2 == 4){
+                //表示此格在封闭的内部，为无效
+                c1.id2 = -1;
+            }
         }else{
             //路径中的边数判断
             //left
