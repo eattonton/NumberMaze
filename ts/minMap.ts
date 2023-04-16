@@ -1439,7 +1439,7 @@ class CSlitherlinkGrid extends CChessGridBase {
                 //console.log(arr2);
                 //内部的点改成路径点
                 for (let c2 of arr2) {
-                    c2.id = 1;
+                    c2.id = -2;
                     c2.id2 = 0;
                 }
             }
@@ -1452,10 +1452,10 @@ class CSlitherlinkGrid extends CChessGridBase {
                 let c1: Cell = this.boxs[row][col];
                 c1.id2 = 0;
                 this.CountEdges(c1);
-                if (c1.id != -1) {
+                if (c1.id > -1) {
                     //路径内的
                     arr1.push(c1);
-                } else {
+                } else if(c1.id == -1){
                     //路径外的
                     if (c1.id2 > 0) {
                         arr1.push(c1);
@@ -1625,19 +1625,19 @@ class CSlitherlinkGrid extends CChessGridBase {
         if (c1.id == -1) {
             //非路径中的边数判断
             //left
-            if (c2left && c2left.id != -1) {
+            if (c2left && c2left.id > -1) {
                 ++c1.id2;
             }
             //right
-            if (c2right && c2right.id != -1) {
+            if (c2right && c2right.id > -1) {
                 ++c1.id2;
             }
             //down
-            if (c2down && c2down.id != -1) {
+            if (c2down && c2down.id > -1) {
                 ++c1.id2;
             }
             //up
-            if (c2up && c2up.id != -1) {
+            if (c2up && c2up.id > -1) {
                 ++c1.id2;
             }
 
@@ -1645,7 +1645,7 @@ class CSlitherlinkGrid extends CChessGridBase {
                 //表示此格在封闭的内部，为无效
                 c1.id2 = -1;
             }
-        } else {
+        } else if (c1.id >= 0){
             //路径中的边数判断
             //left
             if (c1.x <= 0 || (c2left && c2left.id == -1)) {
