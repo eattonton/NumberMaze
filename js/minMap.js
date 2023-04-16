@@ -6,6 +6,23 @@ class Cell {
         this.x = 0;
         this.y = 0;
         this.tag = "";
+        this.up = false;
+        this.down = false;
+        this.left = false;
+        this.right = false;
+        this.show = false;
+    }
+    get CountEdge() {
+        let ires = 0;
+        if (this.up)
+            ++ires;
+        if (this.down)
+            ++ires;
+        if (this.left)
+            ++ires;
+        if (this.right)
+            ++ires;
+        return ires;
     }
     Clone() {
         let c2 = Object.assign({}, this);
@@ -1167,5 +1184,164 @@ class CPartFactory {
         p1.Add(0, 1, 3);
         p1.Add(1, 1, 2);
         return p1;
+    }
+}
+//数回
+class CSlitherlinkGrid extends CChessGridBase {
+    constructor() {
+        super();
+        this.MIN_LOOPS = 1;
+        this.MAX_LOOPS = 3;
+        this.numLoops = 0;
+    }
+    Load() {
+        for (let y = 0; y < this.numRow; y++) {
+            this.boxs.push([]);
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y].push(new Cell());
+                this.boxs[y][x].x = x; //column
+                this.boxs[y][x].y = y; //row
+            }
+        }
+    }
+    SetHard(hard) {
+        this.hard = hard;
+        if (this.hard == 1) {
+            this.numLoops = this.numRow * this.numCol / 5;
+        }
+        else if (this.hard == 3) {
+            this.numCol = 7;
+            this.numRow = 7;
+        }
+        else if (this.hard >= 4) {
+            this.numCol = 12;
+            this.numRow = 12;
+        }
+        //加载单元格
+        this.Load();
+        //生成
+        this.Generate();
+    }
+    //Define a function to generate the puzzle by selecting random cells and connecting them 
+    //until the desired number of loops is achieved
+    Generate() {
+        // while (numLoops < this.MIN_LOOPS || numLoops > this.MAX_LOOPS) {
+        // Reset grid
+        for (let row = 0; row < this.numRow; row++) {
+            for (let col = 0; col < this.numCol; col++) {
+                this.boxs[row][col].up = false;
+                this.boxs[row][col].down = false;
+                this.boxs[row][col].left = false;
+                this.boxs[row][col].right = false;
+            }
+        }
+        // Connect cells
+        let posCell = this.RandomCell();
+        let connectCount = 0;
+        //形成连续的区域 保证取消块数一定
+        while (connectCount < this.numLoops) {
+            const neighbor = this.RandomConnection(posCell);
+            if (neighbor) {
+                posCell = neighbor;
+            }
+            connectCount = 0;
+            for (let row = 0; row < this.numRow; row++) {
+                for (let col = 0; col < this.numCol; col++) {
+                    if (this.boxs[row][col].id >= 0) {
+                        connectCount++;
+                    }
+                }
+            }
+        }
+        //统计边数 含路径内 和 路径外
+        let arr1 = [];
+        for (let row = 0; row < this.numRow; row++) {
+            for (let col = 0; col < this.numCol; col++) {
+                let c1 = this.boxs[row][col];
+                c1.id2 = 0;
+                this.CountEdges(c1);
+                if (c1.id != -1) {
+                    //路径内的
+                    arr1.push(c1);
+                }
+                else {
+                    //路径外的
+                    if (c1.id2 > 0) {
+                        arr1.push(c1);
+                    }
+                }
+            }
+        }
+        //随机获得可以显示的格式
+        let arr2 = CArrayHelper.GetRandQueue(arr1, this.numLoops);
+        for (let c1 of arr2) {
+            c1['show'] = true;
+        }
+    }
+    //Define a function to randomly select a cell from the grid
+    RandomCell() {
+        const row = CArrayHelper.RandomInt(0, this.numRow - 1);
+        const col = CArrayHelper.RandomInt(0, this.numCol - 1);
+        return { row, col };
+    }
+    //Define a function to randomly connect two adjacent cells
+    RandomConnection(posCell) {
+        const neighbors = [];
+        if (posCell.row > 0)
+            neighbors.push({ row: posCell.row - 1, col: posCell.col, dir: 'down' });
+        if (posCell.row < this.numRow - 1)
+            neighbors.push({ row: posCell.row + 1, col: posCell.col, dir: 'up' });
+        if (posCell.col > 0)
+            neighbors.push({ row: posCell.row, col: posCell.col - 1, dir: 'right' });
+        if (posCell.col < this.numCol - 1)
+            neighbors.push({ row: posCell.row, col: posCell.col + 1, dir: 'left' });
+        const neighbor = neighbors[CArrayHelper.RandomInt(0, neighbors.length - 1)];
+        if (neighbor) {
+            const oppositeDir = { up: 'down', down: 'up', left: 'right', right: 'left' }[neighbor.dir];
+            this.boxs[posCell.row][posCell.col].id = 1;
+            this.boxs[neighbor.row][neighbor.col].id = 1;
+            return neighbor;
+        }
+    }
+    //统计单元格所包含的边数
+    CountEdges(c1) {
+        if (c1.id == -1) {
+            //非路径中的边数判断
+            //left
+            if (c1.x > 0 && this.boxs[c1.y][c1.x - 1].id != -1) {
+                ++c1.id2;
+            }
+            //right
+            if (c1.x < this.numCol - 1 && this.boxs[c1.y][c1.x + 1].id != -1) {
+                ++c1.id2;
+            }
+            //down
+            if (c1.y > 0 && this.boxs[c1.y - 1][c1.x].id != -1) {
+                ++c1.id2;
+            }
+            //up
+            if (c1.y < this.numRow - 1 && this.boxs[c1.y + 1][c1.x].id != -1) {
+                ++c1.id2;
+            }
+        }
+        else {
+            //路径中的边数判断
+            //left
+            if (c1.x <= 0 || this.boxs[c1.y][c1.x - 1].id == -1) {
+                ++c1.id2;
+            }
+            //right
+            if (c1.x >= this.numCol - 1 || this.boxs[c1.y][c1.x + 1].id == -1) {
+                ++c1.id2;
+            }
+            //down
+            if (c1.y <= 0 || this.boxs[c1.y - 1][c1.x].id == -1) {
+                ++c1.id2;
+            }
+            //up
+            if (c1.y >= this.numRow - 1 || this.boxs[c1.y + 1][c1.x].id == -1) {
+                ++c1.id2;
+            }
+        }
     }
 }

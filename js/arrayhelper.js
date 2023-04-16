@@ -31,7 +31,7 @@ class CArrayHelper {
         }
         let res = [], random1;
         let array2 = [...array];
-        while (array2.length > 0) {
+        while (array2.length > 0 && res.length <= size) {
             random1 = Math.floor(Math.random() * array2.length);
             res.push(array2[random1]);
             array2.splice(random1, 1);

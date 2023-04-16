@@ -8,6 +8,13 @@ class Cell {
     //放置点位置
     public x0: number;
     public y0: number;
+    //方向属性
+    public up: boolean;
+    public down: boolean;
+    public left: boolean;
+    public right: boolean;
+    //是否显示
+    public show:boolean;
 
     public constructor() {
         this.id = -1;
@@ -15,6 +22,24 @@ class Cell {
         this.x = 0;
         this.y = 0;
         this.tag = "";
+
+        this.up = false;
+        this.down = false;
+        this.left = false;
+        this.right = false;
+
+        this.show = false;
+    }
+
+    public get CountEdge(): number {
+        let ires: number = 0;
+
+        if (this.up) ++ires;
+        if (this.down) ++ires;
+        if (this.left) ++ires;
+        if (this.right) ++ires;
+
+        return ires;
     }
 
     public Clone(): Cell {
@@ -711,21 +736,21 @@ class CShiKaKuGrid extends CChessGridBase {
         }
     }
 
-    public SetHard(hard:number){
+    public SetHard(hard: number) {
         this.hard = hard;
-        let splitNumber:number = 5;
-        if(this.hard == 3){
+        let splitNumber: number = 5;
+        if (this.hard == 3) {
             this.numCol = 7;
             this.numRow = 7;
-        }else if(this.hard >= 4){
+        } else if (this.hard >= 4) {
             this.numCol = 12;
             this.numRow = 12;
             splitNumber = 7;
         }
         this.CreateChessDataWithSplit(splitNumber);
     }
- 
-    public CreateChessDataWithSplit(splitNum:number) {
+
+    public CreateChessDataWithSplit(splitNum: number) {
         //1.定义范围
         let rang1 = new CRange(0, 0, this.numCol - 1, this.numRow - 1);
         //2.分割范围
@@ -735,22 +760,22 @@ class CShiKaKuGrid extends CChessGridBase {
             this.chessRanges[i].id = i + 1;
         }
 
-        if(this.hard == 1) return;
+        if (this.hard == 1) return;
         //4.随机合并范围
         for (let i = 0; i < this.chessRanges.length; i++) {
-            let rang3:CRange = null;
-            let rang1:CRange =  this.chessRanges[i];
-            let i2 =rang1.FindConnectedBlock(this.chessRanges,rang3);
-            if(i2 >= 0 && rang3 != null){
+            let rang3: CRange = null;
+            let rang1: CRange = this.chessRanges[i];
+            let i2 = rang1.FindConnectedBlock(this.chessRanges, rang3);
+            if (i2 >= 0 && rang3 != null) {
                 //找到合并的对象
                 rang3.id = rang1.id;
                 this.chessRanges[i] = rang3;
                 this.chessRanges.splice(i2, 1);
                 console.log(rang3);
             }
-            
+
         }
-       // console.log(this.chessRanges);
+        // console.log(this.chessRanges);
     }
 
     //按照范围分割范围
@@ -1091,13 +1116,13 @@ class CRange {
     }
 
     //查找相邻的Range
-    public FindConnectedBlock(arr2:Array<CRange>, rang3:CRange):number{
+    public FindConnectedBlock(arr2: Array<CRange>, rang3: CRange): number {
         let idx = CArrayHelper.GetRandQueueInRange(arr2.length, 0, arr2.length - 1);
-        for(let i=0;i<idx.length;i++){
+        for (let i = 0; i < idx.length; i++) {
             let rang2 = arr2[i];
-            if(this.id != rang2.id){
+            if (this.id != rang2.id) {
                 //不同类的range进行相邻比较
-                if(CRange.MergeConnectedBlock(this, rang2, rang3)){
+                if (CRange.MergeConnectedBlock(this, rang2, rang3)) {
                     return i;
                 }
             }
@@ -1106,22 +1131,22 @@ class CRange {
     }
 
     //不同方向上尝试合并单元格
-    private static MergeConnectedBlock(rang1:CRange, rang2:CRange, rang3:CRange):boolean{
-        let idxs = CArrayHelper.GetRandQueue(null,4);
-        let iRes:boolean = false;
+    private static MergeConnectedBlock(rang1: CRange, rang2: CRange, rang3: CRange): boolean {
+        let idxs = CArrayHelper.GetRandQueue(null, 4);
+        let iRes: boolean = false;
         rang3 = null;
-        for(let i of idxs){
-            if(i == 0){
+        for (let i of idxs) {
+            if (i == 0) {
                 iRes = CRange.CheckConnectedUp(rang1, rang2, rang3);
-            }else if(i == 1){
+            } else if (i == 1) {
                 iRes = CRange.CheckConnectedDown(rang1, rang2, rang3);
-            }else if(i == 2){
+            } else if (i == 2) {
                 iRes = CRange.CheckConnectedLeft(rang1, rang2, rang3);
-            }else if(i == 3){
+            } else if (i == 3) {
                 iRes = CRange.CheckConnectedRight(rang1, rang2, rang3);
             }
 
-            if(iRes){
+            if (iRes) {
                 break;
             }
 
@@ -1130,9 +1155,9 @@ class CRange {
     }
 
     //rang2 在 rang1 上面
-    private static CheckConnectedUp(rang1:CRange, rang2:CRange, rang3:CRange):boolean{
-        if(rang1.x1 == rang2.x1 && rang1.x2 == rang2.x2){
-            if((rang2.y1 - rang1.y2) == 1){
+    private static CheckConnectedUp(rang1: CRange, rang2: CRange, rang3: CRange): boolean {
+        if (rang1.x1 == rang2.x1 && rang1.x2 == rang2.x2) {
+            if ((rang2.y1 - rang1.y2) == 1) {
                 rang3 = new CRange(rang1.x1, rang1.y1, rang1.x2, rang2.y2);
                 return true;
             }
@@ -1141,9 +1166,9 @@ class CRange {
     }
 
     //rang2 在 rang1 下面
-    private static CheckConnectedDown(rang1:CRange, rang2:CRange, rang3:CRange):boolean{
-        if(rang1.x1 == rang2.x1 && rang1.x2 == rang2.x2){
-            if((rang2.y2 - rang1.y1) == -1){
+    private static CheckConnectedDown(rang1: CRange, rang2: CRange, rang3: CRange): boolean {
+        if (rang1.x1 == rang2.x1 && rang1.x2 == rang2.x2) {
+            if ((rang2.y2 - rang1.y1) == -1) {
                 rang3 = new CRange(rang1.x1, rang2.y1, rang1.x2, rang1.y2);
                 return true;
             }
@@ -1152,9 +1177,9 @@ class CRange {
     }
 
     //rang2 在 rang1 左面
-    private static CheckConnectedLeft(rang1:CRange, rang2:CRange, rang3:CRange):boolean{
-        if(rang1.y1 == rang2.y1 && rang1.y2 == rang2.y2){
-            if((rang2.x2 - rang1.x1) == -1){
+    private static CheckConnectedLeft(rang1: CRange, rang2: CRange, rang3: CRange): boolean {
+        if (rang1.y1 == rang2.y1 && rang1.y2 == rang2.y2) {
+            if ((rang2.x2 - rang1.x1) == -1) {
                 rang3 = new CRange(rang2.x1, rang1.y1, rang1.x2, rang2.y2);
                 return true;
             }
@@ -1163,9 +1188,9 @@ class CRange {
     }
 
     //rang2 在 rang1 右面
-    private static CheckConnectedRight(rang1:CRange, rang2:CRange, rang3:CRange):boolean{
-        if(rang1.y1 == rang2.y1 && rang1.y2 == rang2.y2){
-            if((rang2.x1 - rang1.x2) == 1){
+    private static CheckConnectedRight(rang1: CRange, rang2: CRange, rang3: CRange): boolean {
+        if (rang1.y1 == rang2.y1 && rang1.y2 == rang2.y2) {
+            if ((rang2.x1 - rang1.x2) == 1) {
                 rang3 = new CRange(rang1.x1, rang1.y1, rang2.x2, rang2.y2);
                 return true;
             }
@@ -1320,5 +1345,174 @@ class CPartFactory {
         return p1;
     }
 
+
+}
+
+//数回
+class CSlitherlinkGrid extends CChessGridBase {
+    private MIN_LOOPS: number = 1;
+    private MAX_LOOPS: number = 3;
+    private numLoops: number = 0;
+
+    public constructor() {
+        super();
+    }
+
+    private Load() {
+        for (let y = 0; y < this.numRow; y++) {
+            this.boxs.push([]);
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y].push(new Cell());
+                this.boxs[y][x].x = x;   //column
+                this.boxs[y][x].y = y;   //row
+            }
+        }
+    }
+
+    public SetHard(hard: number) {
+        this.hard = hard;
+        if (this.hard == 1) {
+            this.numLoops = this.numRow * this.numCol / 5;
+        } else if (this.hard == 3) {
+            this.numCol = 7;
+            this.numRow = 7;
+        } else if (this.hard >= 4) {
+            this.numCol = 12;
+            this.numRow = 12;
+        }
+        //加载单元格
+        this.Load();
+        //生成
+        this.Generate();
+
+    }
+
+    //Define a function to generate the puzzle by selecting random cells and connecting them 
+    //until the desired number of loops is achieved
+    public Generate() {
+        // while (numLoops < this.MIN_LOOPS || numLoops > this.MAX_LOOPS) {
+        // Reset grid
+        for (let row = 0; row < this.numRow; row++) {
+            for (let col = 0; col < this.numCol; col++) {
+                this.boxs[row][col].up = false;
+                this.boxs[row][col].down = false;
+                this.boxs[row][col].left = false;
+                this.boxs[row][col].right = false;
+            }
+        }
+        // Connect cells
+        let posCell = this.RandomCell();
+        let connectCount = 0;
+        //形成连续的区域 保证取消块数一定
+        while (connectCount < this.numLoops) {
+            const neighbor = this.RandomConnection(posCell);
+            if (neighbor) {
+                posCell = neighbor;
+
+            }
+            connectCount = 0;
+            for (let row = 0; row < this.numRow; row++) {
+                for (let col = 0; col < this.numCol; col++) {
+                    if (this.boxs[row][col].id >= 0) {
+                        connectCount++;
+                    }
+
+                }
+
+            }
+        }
+        //统计边数 含路径内 和 路径外
+        let arr1 = [];
+        for (let row = 0; row < this.numRow; row++) {
+            for (let col = 0; col < this.numCol; col++) {
+                let c1:Cell = this.boxs[row][col];
+                c1.id2 = 0;
+                this.CountEdges(c1);
+                if(c1.id != -1){
+                    //路径内的
+                    arr1.push(c1);
+                }else{
+                    //路径外的
+                    if(c1.id2 > 0){
+                        arr1.push(c1);
+                    }
+                }
+            }
+        }
+
+        //随机获得可以显示的格式
+        let arr2 = CArrayHelper.GetRandQueue(arr1, this.numLoops);
+        for(let c1 of arr2){
+            c1['show'] = true;
+        }
+
+    }
+
+
+    //Define a function to randomly select a cell from the grid
+    private RandomCell() {
+        const row = CArrayHelper.RandomInt(0, this.numRow - 1);
+        const col = CArrayHelper.RandomInt(0, this.numCol - 1);
+        return { row, col };
+    }
+
+    //Define a function to randomly connect two adjacent cells
+    private RandomConnection(posCell) {
+        const neighbors = [];
+        if (posCell.row > 0) neighbors.push({ row: posCell.row - 1, col: posCell.col, dir: 'down' });
+        if (posCell.row < this.numRow - 1) neighbors.push({ row: posCell.row + 1, col: posCell.col, dir: 'up' });
+        if (posCell.col > 0) neighbors.push({ row: posCell.row, col: posCell.col - 1, dir: 'right' });
+        if (posCell.col < this.numCol - 1) neighbors.push({ row: posCell.row, col: posCell.col + 1, dir: 'left' });
+        const neighbor = neighbors[CArrayHelper.RandomInt(0, neighbors.length - 1)];
+        if (neighbor) {
+            const oppositeDir = { up: 'down', down: 'up', left: 'right', right: 'left' }[neighbor.dir];
+            this.boxs[posCell.row][posCell.col].id = 1;
+            this.boxs[neighbor.row][neighbor.col].id = 1;
+            return neighbor;
+        }
+    }
+ 
+    //统计单元格所包含的边数
+    private CountEdges(c1: Cell) {
+        if (c1.id == -1) {
+            //非路径中的边数判断
+            //left
+            if (c1.x > 0 && this.boxs[c1.y][c1.x - 1].id != -1) {
+                ++c1.id2;
+            }
+            //right
+            if (c1.x < this.numCol - 1 && this.boxs[c1.y][c1.x + 1].id != -1) {
+                ++c1.id2;
+            }
+            //down
+            if (c1.y > 0 && this.boxs[c1.y - 1][c1.x].id != -1) {
+                ++c1.id2;
+            }
+            //up
+            if (c1.y < this.numRow - 1 && this.boxs[c1.y + 1][c1.x].id != -1) {
+                ++c1.id2;
+            }
+        }else{
+            //路径中的边数判断
+            //left
+            if (c1.x <= 0 || this.boxs[c1.y][c1.x - 1].id == -1) {
+                ++c1.id2;
+            }
+            //right
+            if (c1.x >= this.numCol - 1 || this.boxs[c1.y][c1.x + 1].id == -1) {
+                ++c1.id2;
+            }
+            //down
+            if (c1.y <= 0 || this.boxs[c1.y - 1][c1.x].id == -1) {
+                ++c1.id2;
+            }
+            //up
+            if (c1.y >= this.numRow - 1 || this.boxs[c1.y + 1][c1.x].id == -1) {
+                ++c1.id2;
+            }
+        }
+
+
+    }
 
 }
