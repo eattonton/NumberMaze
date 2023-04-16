@@ -1373,12 +1373,16 @@ class CSlitherlinkGrid extends CChessGridBase {
         this.hard = hard;
         if (this.hard == 1) {
             this.numLoops = this.numRow * this.numCol / 5;
-        } else if (this.hard == 3) {
+        }else if (this.hard == 2) {
+            this.numLoops = this.numRow * this.numCol / 2;
+        }else if (this.hard == 3) {
             this.numCol = 7;
             this.numRow = 7;
+            this.numLoops = this.numRow * this.numCol / 2;
         } else if (this.hard >= 4) {
-            this.numCol = 12;
-            this.numRow = 12;
+            this.numCol = 10;
+            this.numRow = 10;
+            this.numLoops = this.numRow * this.numCol / 2;
         }
         //加载单元格
         this.Load();

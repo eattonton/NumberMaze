@@ -58,7 +58,7 @@ function CreateA4(category) {
         m_drawBoard.WriteText("舒尔特表", 8.0, 2.0, 1.4);
     } else if (category <= 13) {
         m_drawBoard.WriteText("数 方", 8.0, 2.0, 1.4);
-    } else if (category <= 16) {
+    } else if (category <= 17) {
         m_drawBoard.WriteText("数 回", 8.0, 2.0, 1.4);
     }
 
@@ -153,7 +153,27 @@ function CreateA4(category) {
         CreateOneBoxSlitherlink(11.5, 7);
         CreateOneBoxSlitherlink(1.5, 18);
         CreateOneBoxSlitherlink(11.5, 18);
-    }
+    } else if (category == 15) {
+        //数回(简单)
+        m_BlockCellWidth = 1.5;
+        m_hard = 2;
+        CreateOneBoxSlitherlink(1.5, 7);
+        CreateOneBoxSlitherlink(11.5, 7);
+        CreateOneBoxSlitherlink(1.5, 18);
+        CreateOneBoxSlitherlink(11.5, 18);
+    } else if (category == 16) {
+        //数回(中等)
+        m_BlockCellWidth = 1.45;
+        m_hard = 3;
+        CreateOneBoxSlitherlink(5.5, 4.5);
+        CreateOneBoxSlitherlink(5.5, 17);
+    } else if (category == 17) {
+        //数回(困难)
+        m_hard = 4;
+        m_BlockCellWidth = 1.10;
+        CreateOneBoxSlitherlink(5.0, 4.5);
+        CreateOneBoxSlitherlink(5.0, 17.5);
+    } 
 
     //贴图
     loadImg0();
