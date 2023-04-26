@@ -67,7 +67,7 @@ class CChessGridBase {
 
     }
 
-    //根据序号获得坐标
+    //根据序号获得坐标   x,y
     public GetRowColumn(idx: number): number[] {
         let res = [0, 0];
 
@@ -78,9 +78,106 @@ class CChessGridBase {
     }
 
     //根据坐标获得序号
-    public GetCellIndex(x: number, y: number): number {
+    public GetPosition(x: number, y: number): number {
         return this.numCol * y + x;
     }
+
+    //根据单元格 获得序号
+    public GetPositionByCell(c1: Cell): number {
+        if (c1) {
+            return this.GetPosition(c1.x, c1.y);
+        }
+        return -1;
+    }
+
+    //通过序号 获得  单元格
+    public GetAtCellByIndex(idx: number): Cell {
+        let xy = this.GetRowColumn(idx);
+        if (xy[0] >= 0 && xy[0] < this.numCol && xy[1] >= 0 && xy[1] < this.numRow) {
+            return this.boxs[xy[1]][xy[0]];
+        }
+        return null;
+    }
+
+    //通过位置 获得 单元格
+    public GetAtCellByXY(x: number, y: number): Cell {
+        if (x >= 0 && x < this.numCol && y >= 0 && y < this.numRow) {
+            return this.boxs[y][x];
+        }
+        return null;
+    }
+
+    //从表格中随机选择一个单元格
+    public RandomCell() {
+        const row = CArrayHelper.RandomInt(0, this.numRow - 1);
+        const col = CArrayHelper.RandomInt(0, this.numCol - 1);
+        return { row, col };
+    }
+
+    //随机获得相邻的单元格
+    public RandomNeighborPos(posCell) {
+        const neighbors = [];
+        if (posCell.row > 0) neighbors.push({ row: posCell.row - 1, col: posCell.col, dir: 'down' });
+        if (posCell.row < this.numRow - 1) neighbors.push({ row: posCell.row + 1, col: posCell.col, dir: 'up' });
+        if (posCell.col > 0) neighbors.push({ row: posCell.row, col: posCell.col - 1, dir: 'right' });
+        if (posCell.col < this.numCol - 1) neighbors.push({ row: posCell.row, col: posCell.col + 1, dir: 'left' });
+        const neighbor = neighbors[CArrayHelper.RandomInt(0, neighbors.length - 1)];
+        if (neighbor) {
+            const oppositeDir = { up: 'down', down: 'up', left: 'right', right: 'left' }[neighbor.dir];
+            return { row: neighbor.row, col: neighbor.col, dir: neighbor.dir, row0: posCell.row, col0: posCell.col, dir0: oppositeDir };
+        }
+
+        return null;
+    }
+
+    //按照方向获得旁边的单元格
+    public NextCell(c1: Cell, eDir: CellDirection): Cell {
+        if (eDir == CellDirection.up) {
+            return this.NextCellUp(c1);
+        } else if (eDir == CellDirection.down) {
+            return this.NextCellDown(c1);
+        } else if (eDir == CellDirection.right) {
+            return this.NextCellRight(c1);
+        } else if (eDir == CellDirection.left) {
+            return this.NextCellLeft(c1);
+        }
+        return null;
+    }
+
+    //获得up 单元格
+    public NextCellUp(c1: Cell): Cell {
+        if (c1.y < this.numRow - 1) {
+            return this.boxs[c1.y + 1][c1.x];
+        }
+
+        return null;
+    }
+    //获得down 单元格
+    public NextCellDown(c1: Cell): Cell {
+        if (c1.y > 0) {
+            return this.boxs[c1.y - 1][c1.x];
+        }
+
+        return null;
+    }
+
+    //获得right 单元格
+    public NextCellRight(c1: Cell): Cell {
+        if (c1.x < this.numCol - 1) {
+            return this.boxs[c1.y][c1.x + 1];
+        }
+
+        return null;
+    }
+    //获得left 单元格
+    public NextCellLeft(c1: Cell): Cell {
+        if (c1.x > 0) {
+            return this.boxs[c1.y][c1.x - 1];
+        }
+
+        return null;
+    }
+
 }
 
 //数字地雷
@@ -713,7 +810,7 @@ class CSchulteGrid extends CChessGridBase {
         let arr2 = CArrayHelper.GetRandQueueInRange(this.hard, 1, num);
         for (let y = 0; y < this.numRow; y++) {
             for (let x = 0; x < this.numCol; x++) {
-                this.boxs[y][x].id = arr1[super.GetCellIndex(x, y)];
+                this.boxs[y][x].id = arr1[super.GetPosition(x, y)];
                 if (arr2.indexOf(this.boxs[y][x].id) >= 0) {
                     this.boxs[y][x].id = -1;
                 }
@@ -950,7 +1047,7 @@ class CShiKaKuGrid extends CChessGridBase {
                     } else if (arr1.length == 1) {
                         let xy2 = this.GetRowColumn(arr1[0]);
                         let arr2 = this.GetNearEmptyCells(xy2[0], xy2[1]);
-                        let pos1 = this.GetCellIndex(x, y);
+                        let pos1 = this.GetPosition(x, y);
                         if (arr2.length == 1 && arr2[0] == pos1) {
                             //连续连个格式封闭
                             return true;
@@ -969,19 +1066,19 @@ class CShiKaKuGrid extends CChessGridBase {
         //判断是否存在无效空格 四周不存在 -1
         let pt1 = this.GetPosUp(x, y);
         if (pt1.length >= 2 && this.boxs[pt1[1]][pt1[0]].id == -1) {
-            arr1.push(this.GetCellIndex(pt1[0], pt1[1]));
+            arr1.push(this.GetPosition(pt1[0], pt1[1]));
         }
         pt1 = this.GetPosDown(x, y);
         if (pt1.length >= 2 && this.boxs[pt1[1]][pt1[0]].id == -1) {
-            arr1.push(this.GetCellIndex(pt1[0], pt1[1]));
+            arr1.push(this.GetPosition(pt1[0], pt1[1]));
         }
         pt1 = this.GetPosRight(x, y);
         if (pt1.length >= 2 && this.boxs[pt1[1]][pt1[0]].id == -1) {
-            arr1.push(this.GetCellIndex(pt1[0], pt1[1]));
+            arr1.push(this.GetPosition(pt1[0], pt1[1]));
         }
         pt1 = this.GetPosLeft(x, y);
         if (pt1.length >= 2 && this.boxs[pt1[1]][pt1[0]].id == -1) {
-            arr1.push(this.GetCellIndex(pt1[0], pt1[1]));
+            arr1.push(this.GetPosition(pt1[0], pt1[1]));
         }
 
         return arr1;
@@ -1412,7 +1509,7 @@ class CSlitherlinkGrid extends CChessGridBase {
             }
         }
         // Connect cells
-        let posCell = this.RandomCell();
+        let posCell = super.RandomCell();
         let connectCount = 0;
         //形成连续的区域 保证取消块数一定
         while (connectCount < this.numLoops) {
@@ -1455,7 +1552,7 @@ class CSlitherlinkGrid extends CChessGridBase {
                 if (c1.id > -1) {
                     //路径内的
                     arr1.push(c1);
-                } else if(c1.id == -1){
+                } else if (c1.id == -1) {
                     //路径外的
                     if (c1.id2 > 0) {
                         arr1.push(c1);
@@ -1472,22 +1569,9 @@ class CSlitherlinkGrid extends CChessGridBase {
 
     }
 
-
-    //Define a function to randomly select a cell from the grid
-    private RandomCell() {
-        const row = CArrayHelper.RandomInt(0, this.numRow - 1);
-        const col = CArrayHelper.RandomInt(0, this.numCol - 1);
-        return { row, col };
-    }
-
-    //Define a function to randomly connect two adjacent cells
+    //随机链接相邻的两个单元格
     private RandomConnection(posCell) {
-        const neighbors = [];
-        if (posCell.row > 0) neighbors.push({ row: posCell.row - 1, col: posCell.col, dir: 'down' });
-        if (posCell.row < this.numRow - 1) neighbors.push({ row: posCell.row + 1, col: posCell.col, dir: 'up' });
-        if (posCell.col > 0) neighbors.push({ row: posCell.row, col: posCell.col - 1, dir: 'right' });
-        if (posCell.col < this.numCol - 1) neighbors.push({ row: posCell.row, col: posCell.col + 1, dir: 'left' });
-        const neighbor = neighbors[CArrayHelper.RandomInt(0, neighbors.length - 1)];
+        const neighbor = super.RandomNeighborPos(posCell);
         if (neighbor) {
             const oppositeDir = { up: 'down', down: 'up', left: 'right', right: 'left' }[neighbor.dir];
             this.boxs[posCell.row][posCell.col].id = 1;
@@ -1569,53 +1653,6 @@ class CSlitherlinkGrid extends CChessGridBase {
 
     }
 
-    private NextCell(c1: Cell, eDir: CellDirection): Cell {
-        if (eDir == CellDirection.up) {
-            return this.NextCellUp(c1);
-        } else if (eDir == CellDirection.down) {
-            return this.NextCellDown(c1);
-        } else if (eDir == CellDirection.right) {
-            return this.NextCellRight(c1);
-        } else if (eDir == CellDirection.left) {
-            return this.NextCellLeft(c1);
-        }
-        return null;
-    }
-
-    //获得up 单元格
-    private NextCellUp(c1: Cell): Cell {
-        if (c1.y < this.numRow - 1) {
-            return this.boxs[c1.y + 1][c1.x];
-        }
-
-        return null;
-    }
-    //获得down 单元格
-    private NextCellDown(c1: Cell): Cell {
-        if (c1.y > 0) {
-            return this.boxs[c1.y - 1][c1.x];
-        }
-
-        return null;
-    }
-
-    //获得right 单元格
-    private NextCellRight(c1: Cell): Cell {
-        if (c1.x < this.numCol - 1) {
-            return this.boxs[c1.y][c1.x + 1];
-        }
-
-        return null;
-    }
-    //获得left 单元格
-    private NextCellLeft(c1: Cell): Cell {
-        if (c1.x > 0) {
-            return this.boxs[c1.y][c1.x - 1];
-        }
-
-        return null;
-    }
-
     //统计单元格所包含的边数
     private CountEdges(c1: Cell) {
         let c2up: Cell = this.NextCell(c1, CellDirection.up);
@@ -1645,7 +1682,7 @@ class CSlitherlinkGrid extends CChessGridBase {
                 //表示此格在封闭的内部，为无效
                 c1.id2 = -1;
             }
-        } else if (c1.id >= 0){
+        } else if (c1.id >= 0) {
             //路径中的边数判断
             //left
             if (c1.x <= 0 || (c2left && c2left.id == -1)) {
@@ -1669,3 +1706,385 @@ class CSlitherlinkGrid extends CChessGridBase {
     }
 
 }
+
+//数连
+class CNumberlinkGrid extends CChessGridBase {
+    private pathSize: number = 12;
+    private splitter: number = 12;
+    private pathArray: Array<any> = [];
+
+    public constructor() {
+        super();
+    }
+
+    private Load() {
+        for (let y = 0; y < this.numRow; y++) {
+            this.boxs.push([]);
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y].push(new Cell());
+                this.boxs[y][x].x = x;   //column
+                this.boxs[y][x].y = y;   //row
+            }
+        }
+    }
+
+    //重置 
+    private Reset(): void {
+        this.pathArray = [];
+        for (let y = 0; y < this.numRow; y++) {
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y][x].id = -1;
+                this.boxs[y][x].id2 = -1;
+                this.boxs[y][x].show = false;
+            }
+        }
+    }
+
+    //设置难度 并 创建 
+    public SetHard(hard: number) {
+        this.hard = hard;
+        this.numCol = 6;
+        this.numRow = 6;
+        this.splitter = 3;
+        this.pathSize = 8;
+ 
+        if(this.hard == 2){
+            //中等
+            this.numCol = 10;
+            this.numRow = 10;
+            this.splitter = 5;
+            this.pathSize = 12;
+        }else if(this.hard == 3){
+            //困难
+            this.numCol = 12;
+            this.numRow = 12;
+            this.splitter = 6;
+            this.pathSize = 14;
+        }
+        
+        //加载单元格
+        this.Load();
+
+        while (this.pathArray.length <= 3) {
+            this.Reset();
+            //生成
+            this.Generate();
+
+        }
+
+    }
+
+    //生成
+    public Generate() {
+        let id2: number = 0;
+        //按照区块获得序列
+        let blockIdxX = this.GetSplitterArray(this.numCol, this.splitter);
+        let blockIdxY = this.GetSplitterArray(this.numRow, this.splitter);
+        //生成路径
+        for (let i = 0; i < 100; i++) {
+            //1.获得 空白的格子
+            let emptyIdx: Array<number> = this.GetEmptyBoxArray();
+            if (emptyIdx.length < 2) break;
+            let id: number = i + 1;
+            //2.随机获得两个
+            let randIdx  = [];
+            if(this.hard == 1){
+                //按照块 定位 点 
+                randIdx = this.GetRandIndexByBlock(CArrayHelper.GetRandQueue(emptyIdx, emptyIdx.length), blockIdxX, blockIdxY);
+            }else{
+                //随机获得 距离最长的 两个点
+                randIdx = this.GetRandIndexByMaxDistance(emptyIdx);
+            }
+ 
+            if (randIdx.length < 2) continue;
+            //3.生成路径
+            let arr1 = this.CreateOnePath(id, randIdx[0], randIdx[1]);
+            if (arr1) {
+                this.pathArray.push(arr1);
+                this.SetCellVisible(id, ++id2, arr1);
+            }
+
+        }
+
+    }
+
+    //设置单元格是否显示 只显示两端
+    private SetCellVisible(id: number, id2: number, arrPath: Array<number>) {
+        for (let y = 0; y < this.numRow; y++) {
+            this.boxs.push([]);
+            for (let x = 0; x < this.numCol; x++) {
+                if (this.boxs[y][x].id == id) {
+                    this.boxs[y][x].id2 = id2;
+                    let p1 = this.GetPositionByCell(this.boxs[y][x]);
+                    if (arrPath.indexOf(p1) > 0 && arrPath.indexOf(p1) < arrPath.length - 1) {
+                        this.boxs[y][x].show = false;
+                    } else {
+                        this.boxs[y][x].show = true;
+                    }
+                }
+            }
+        }
+    }
+
+    //获得随机序列中 最长的
+    private GetRandIndexByMaxDistance(arr1: Array<number>): Array<number> {
+        let arr2: Array<number> = [];
+        let arr3: Array<Array<number>> = [];
+        for (let i = 0; i < 1000; i++) {
+            arr3.push(CArrayHelper.GetRandQueue(arr1, 2));
+        }
+
+        let dist = 0;
+        for (let i = 0; i < arr3.length; i++) {
+            let arr4 = arr3[i];
+            let pt1 = this.GetRowColumn(arr4[0]);
+            let pt2 = this.GetRowColumn(arr4[1]);
+            let dist2 = (pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]);
+            if (dist2 > dist) {
+                arr2 = arr4;
+            }
+        }
+
+        return arr2;
+    }
+
+    //按照区块获得 两个位置
+    private GetRandIndexByBlock(arr1: Array<number>, blockIdxX: Array<Array<number>>, blockIdxY: Array<Array<number>>): Array<number> {
+        let arr2: Array<number> = [];
+        let randArr = CArrayHelper.GetRandQueue(null, blockIdxX.length * blockIdxY.length);
+        //判断此格 是不是在随机的单元内部
+        for (let idxXY of randArr) {
+            let blockRange1 = this.GetBlockRange(idxXY, blockIdxX, blockIdxY);
+            //找一个满足 区块的单元格
+            this.GetPositionByBlockRange(arr1, blockRange1, arr2);
+            if (arr2.length >= 2) {
+                break;
+            }
+            //找到斜对面的区块
+            let idxXY2 = { 0: 3, 1: 2, 2: 1, 3: 0 }[idxXY];
+            let blockRange2 = this.GetBlockRange(idxXY2, blockIdxX, blockIdxY);
+            this.GetPositionByBlockRange(arr1, blockRange2, arr2);
+
+            if (arr2.length >= 2) {
+                break;
+            }
+        }
+        return arr2;
+    }
+
+    //查找符合要求的单元格位置
+    private GetPositionByBlockRange(arr1: Array<number>, blockRange: any, arr2: Array<number>): void {
+        for (let pos1 of arr1) {
+            if (arr2.indexOf(pos1) >= 0) continue;
+
+            let cellX: number = this.GetRowColumn(pos1)[0];
+            let cellY: number = this.GetRowColumn(pos1)[1];
+            if (cellX >= blockRange['minX'] && cellX <= blockRange['maxX']
+                && cellY >= blockRange['minY'] && cellY <= blockRange['maxY']) {
+                //符合在此区块内 
+                arr2.push(pos1);
+                break;
+            }
+        }
+    }
+
+    //根据块序号 获得 块的范围 
+    private GetBlockRange(idxXY: number, blockIdxX: Array<Array<number>>, blockIdxY: Array<Array<number>>): any {
+        let idxX: number = idxXY % blockIdxX.length;
+        let idxY: number = Math.floor(idxXY / blockIdxX.length);
+
+        let minY: number = blockIdxY[idxY][0];
+        let maxY: number = blockIdxY[idxY][1];
+        let minX: number = blockIdxX[idxX][0];
+        let maxX: number = blockIdxX[idxX][1];
+
+        return { minX, maxX, minY, maxY };
+    }
+
+    //通过分割获得数组  [[0,2],[3,5]]
+    private GetSplitterArray(numSize: number, splitter: number): Array<Array<number>> {
+        let lst1: Array<Array<number>> = [];
+        for (let i = 0; i < numSize; i++) {
+            let lst2: Array<number> = [];
+            lst2.push(i);
+            i = i + splitter - 1;
+            lst2.push(i);
+            if (i < numSize) {
+                lst1.push(lst2);
+            }
+        }
+
+        return lst1;
+    }
+
+    //获得还未填的单元格
+    private GetEmptyBoxArray(): Array<number> {
+        let arr1: Array<number> = [];
+        for (let y = 0; y < this.numRow; y++) {
+            this.boxs.push([]);
+            for (let x = 0; x < this.numCol; x++) {
+                if (this.boxs[y][x].id == -1) {
+                    arr1.push(this.GetPositionByCell(this.boxs[y][x]));
+                }
+            }
+        }
+        return arr1;
+    }
+
+    //创建一个路径
+    private CreateOnePath(id: number, p1: number, p2: number): Array<number> {
+        let arr1: Array<number> = [p1];
+
+        let arr2: Array<Array<number>> = this.CreatePaths(p1, p2, arr1);
+        //查找最短的一条路径
+        //let arr3 = this.FindShortPath(arr2);
+        //随机选择一条
+        let arr3 = this.FindRandPath(arr2);
+
+        if (arr3) {
+            for (let idx of arr3) {
+                let c1: Cell = this.GetAtCellByIndex(idx);
+                c1.id = id;
+            }
+        }
+
+        return arr3;
+    }
+
+    //随机返回一个路径
+    private FindRandPath(arr1: Array<Array<number>>): Array<number> {
+        let arr3 = null;
+        let arr4: Array<Array<number>> = [];
+        for (let arr2 of arr1) {
+            if (arr2.length > 4 && arr2.length <= this.pathSize) {
+                arr4.push(arr2);
+            }
+        }
+
+        if (arr4.length > 0) {
+            let idx = CArrayHelper.RandomInt(0, arr4.length - 1);
+            arr3 = arr4[idx];
+        }
+
+        return arr3;
+    }
+
+    //查找最短路径
+    private FindShortPath(arr1: Array<Array<number>>): Array<number> {
+        let pathLen = 1000;
+        let arr3 = null;
+        for (let arr2 of arr1) {
+            if (arr2.length < pathLen && arr2.length > 4 && arr2.length <= this.pathSize) {
+                arr3 = arr2;
+                pathLen = arr2.length;
+            }
+        }
+
+        return arr3;
+    }
+
+    //生成路径
+    private CreatePaths(p1: number, p2: number, arr1: Array<number>): Array<Array<number>> {
+        let arr2: Array<Array<number>> = [];
+
+        let c1: Cell = this.GetAtCellByIndex(p1);
+        //1. 获得 下一个有效的单元格位置
+        let cUp = this.NextCell(c1, CellDirection.up);
+        let cDown = this.NextCell(c1, CellDirection.down);
+        let cLeft = this.NextCell(c1, CellDirection.left);
+        let cRight = this.NextCell(c1, CellDirection.right);
+
+        let pUp: number = this.GetPositionByCell(cUp);
+        let pDown: number = this.GetPositionByCell(cDown);
+        let pLeft: number = this.GetPositionByCell(cLeft);
+        let pRight: number = this.GetPositionByCell(cRight);
+
+        let arrUp: Array<Array<number>> = [];
+        let arrDown: Array<Array<number>> = [];
+        let arrLeft: Array<Array<number>> = [];
+        let arrRight: Array<Array<number>> = [];
+        //判断能不能加
+        if (cUp && cUp.id < 0 && pUp >= 0 && arr1.indexOf(pUp) < 0 && pUp != p1) {
+            //添加到一个新的路径
+            let arr3: Array<number> = [...arr1];
+            arr3.push(pUp);
+
+            if (pUp == p2) {
+                //结束
+                arr2.push(arr3);
+            } else if (arr3.length < this.pathSize) {
+                //表示还没结束
+                arrUp = this.CreatePaths(pUp, p2, arr3);
+            }
+
+        }
+
+        if (cDown && cDown.id < 0 && pDown >= 0 && arr1.indexOf(pDown) < 0 && pDown != p1) {
+            //添加到一个新的路径
+            let arr3: Array<number> = [...arr1];
+            arr3.push(pDown);
+
+            if (pDown == p2) {
+                //结束
+                arr2.push(arr3);
+            } else if (arr3.length < this.pathSize) {
+                //表示还没结束
+                arrDown = this.CreatePaths(pDown, p2, arr3);
+            }
+
+        }
+
+        if (cLeft && cLeft.id < 0 && pLeft >= 0 && arr1.indexOf(pLeft) < 0 && pLeft != p1) {
+            //添加到一个新的路径
+            let arr3: Array<number> = [...arr1];
+            arr3.push(pLeft);
+
+            if (pLeft == p2) {
+                //结束
+                arr2.push(arr3);
+            } else if (arr3.length < this.pathSize) {
+                //表示还没结束
+                arrLeft = this.CreatePaths(pLeft, p2, arr3);
+            }
+
+        }
+
+        if (cRight && cRight.id < 0 && pRight >= 0 && arr1.indexOf(pRight) < 0 && pRight != p1) {
+            //添加到一个新的路径
+            let arr3: Array<number> = [...arr1];
+            arr3.push(pRight);
+
+            if (pRight == p2) {
+                //结束
+                arr2.push(arr3);
+            } else if (arr3.length < this.pathSize) {
+                //表示还没结束
+                arrRight = this.CreatePaths(pRight, p2, arr3);
+            }
+
+        }
+
+        //记录获得的点
+        for (let item1 of arrUp) {
+            arr2.push(item1);
+        }
+
+        for (let item1 of arrDown) {
+            arr2.push(item1);
+        }
+
+        for (let item1 of arrLeft) {
+            arr2.push(item1);
+        }
+
+        for (let item1 of arrRight) {
+            arr2.push(item1);
+        }
+
+        return arr2;
+    }
+
+
+}
+
+

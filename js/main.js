@@ -45,7 +45,6 @@ function CreateA4(category) {
     }
 
     var toastDlg = new Toast({
-
         text: "生成中"
     });
     toastDlg.Show();
@@ -60,6 +59,8 @@ function CreateA4(category) {
         m_drawBoard.WriteText("数 方", 8.0, 2.0, 1.4);
     } else if (category <= 17) {
         m_drawBoard.WriteText("数 回", 8.0, 2.0, 1.4);
+    }else if (category <= 20) {
+        m_drawBoard.WriteText("数 连", 8.0, 2.0, 1.4);
     }
 
     if (category == 1) {
@@ -173,6 +174,26 @@ function CreateA4(category) {
         m_BlockCellWidth = 1.10;
         CreateOneBoxSlitherlink(5.0, 4.5);
         CreateOneBoxSlitherlink(5.0, 17.5);
+    } else if (category == 18) {
+        //数连(入门)
+        m_BlockCellWidth = 1.3;
+        m_hard = 1;
+        CreateOneBoxNumberlink(1.5, 7);
+        CreateOneBoxNumberlink(11.5, 7);
+        CreateOneBoxNumberlink(1.5, 18);
+        CreateOneBoxNumberlink(11.5, 18);
+    } else if (category == 19) {
+        //数连(中等)
+        m_BlockCellWidth = 1.1;
+        m_hard = 2;
+        CreateOneBoxNumberlink(5.5, 4.5);
+        CreateOneBoxNumberlink(5.5, 17);
+    } else if (category == 20) {
+        //数连(困难)
+        m_hard = 3;
+        m_BlockCellWidth = 0.95;
+        CreateOneBoxNumberlink(5.0, 4.5);
+        CreateOneBoxNumberlink(5.0, 17.5);
     } 
 
     //贴图
@@ -221,6 +242,15 @@ function CreateOneBoxSlitherlink(x, y) {
     chess1.SetHard(m_hard);
     //3.绘制表格
     DrawSlitherlink(x, y, chess1);
+}
+
+//生成一个数连
+function CreateOneBoxNumberlink(x, y){
+    //1.生成棋盘
+    let chess1 = new CNumberlinkGrid();
+    chess1.SetHard(m_hard);
+    //3.绘制表格
+    DrawNumberlink(x, y, chess1);
 }
 
 //绘制数字地雷方格
@@ -388,6 +418,37 @@ function DrawSlitherlink(x0, y0, chess1) {
     }
 }
 
+//绘制数连Numberlink
+function DrawNumberlink(x0, y0, chess1) {
+    let x1 = x0;
+    let y1 = y0;
+    m_drawBoard.DrawSquare(x0, y0, m_BlockCellWidth * chess1.numRow, "grey", "dash");
+    for (let y = 0; y < chess1.numRow; y++) {
+        for (let x = 0; x < chess1.numCol; x++) {
+            //1.绘制方格
+            //m_drawBoard.DrawSquare(x1, y1, 0, "grey", "dash");
+            let str1 = "";
+            //3.获得当前位置在rang1中的序号
+            let idx1 = chess1.boxs[y][x].id;
+            let idx2 = chess1.boxs[y][x].id2;
+            let bShow = chess1.boxs[y][x].show;
+            //5.显示占位的数量
+            //7.绘制文字
+            if(bShow){
+                str1 = idx2 + "";
+            }
+            
+            //绘制 
+            if(str1 != ""){
+                m_drawBoard.WriteText(str1, x1 + 0.18 * m_BlockCellWidth, y1 + 0.7 * m_BlockCellWidth, 0.65);
+            }
+            
+            x1 = x1 + m_BlockCellWidth;
+        }
+        y1 = y1 + m_BlockCellWidth;
+        x1 = x0;
+    }
+}
 
 //显示生成的题目图片，长按保存
 function ShowImageDlg() {
