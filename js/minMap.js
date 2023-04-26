@@ -1645,19 +1645,13 @@ class CNumberlinkGrid extends CChessGridBase {
     //获得随机序列中 最长的
     GetRandIndexByMaxDistance(arr1) {
         let arr2 = [];
-        let arr3 = [];
-        for (let i = 0; i < 5; i++) {
+        let dist1 = 0;
+        for (let i = 0; i < 8; i++) {
             let ptArr = CArrayHelper.GetRandQueue(arr1, 2);
             let dist2 = this.DistancePoint(ptArr[0], ptArr[1]);
-            if (dist2 > 3) {
-                arr3.push(ptArr);
-            }
-        }
-        let dist1 = 0;
-        for (let i = 0; i < arr3.length; i++) {
-            let dist2 = this.DistancePoint(arr3[i][0], arr3[i][1]);
             if (dist2 > dist1) {
-                arr2 = arr3[i];
+                //arr3.push(ptArr);
+                arr2 = ptArr;
                 dist1 = dist2;
             }
         }

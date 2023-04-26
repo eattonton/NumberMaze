@@ -472,12 +472,3 @@ function ShowImageDlg() {
 
     dlg1.Show();
 }
-
-//加载字典
-function LoadDictionary(url, cb) {
-    $.get(url, (e) => {
-        if (e) {
-            cb(e);
-        }
-    })
-}
