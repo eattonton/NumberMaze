@@ -1746,7 +1746,7 @@ class CNumberlinkGrid extends CChessGridBase {
         this.numCol = 6;
         this.numRow = 6;
         this.splitter = 3;
-        this.pathSize = 8;
+        this.pathSize = 10;
  
         if(this.hard == 2){
             //中等
@@ -1781,7 +1781,7 @@ class CNumberlinkGrid extends CChessGridBase {
         let blockIdxX = this.GetSplitterArray(this.numCol, this.splitter);
         let blockIdxY = this.GetSplitterArray(this.numRow, this.splitter);
         //生成路径
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 200; i++) {
             //1.获得 空白的格子
             let emptyIdx: Array<number> = this.GetEmptyBoxArray();
             if (emptyIdx.length < 2) break;
@@ -2012,7 +2012,7 @@ class CNumberlinkGrid extends CChessGridBase {
             if (pUp == p2) {
                 //结束
                 arr2.push(arr3);
-            } else if (arr3.length < this.pathSize) {
+            } else if (arr3.length <= this.pathSize) {
                 //表示还没结束
                 arrUp = this.CreatePaths(pUp, p2, arr3);
             }
@@ -2027,7 +2027,7 @@ class CNumberlinkGrid extends CChessGridBase {
             if (pDown == p2) {
                 //结束
                 arr2.push(arr3);
-            } else if (arr3.length < this.pathSize) {
+            } else if (arr3.length <= this.pathSize) {
                 //表示还没结束
                 arrDown = this.CreatePaths(pDown, p2, arr3);
             }
@@ -2042,7 +2042,7 @@ class CNumberlinkGrid extends CChessGridBase {
             if (pLeft == p2) {
                 //结束
                 arr2.push(arr3);
-            } else if (arr3.length < this.pathSize) {
+            } else if (arr3.length <= this.pathSize) {
                 //表示还没结束
                 arrLeft = this.CreatePaths(pLeft, p2, arr3);
             }
@@ -2057,7 +2057,7 @@ class CNumberlinkGrid extends CChessGridBase {
             if (pRight == p2) {
                 //结束
                 arr2.push(arr3);
-            } else if (arr3.length < this.pathSize) {
+            } else if (arr3.length <= this.pathSize) {
                 //表示还没结束
                 arrRight = this.CreatePaths(pRight, p2, arr3);
             }
