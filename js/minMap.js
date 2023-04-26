@@ -1524,6 +1524,7 @@ class CNumberlinkGrid extends CChessGridBase {
         this.splitter = 12;
         this.pathArray = [];
         this.bSuccessPath = false; //是否找到了路径
+        this.pathNumber = 3;
     }
     Load() {
         for (let y = 0; y < this.numRow; y++) {
@@ -1558,17 +1559,19 @@ class CNumberlinkGrid extends CChessGridBase {
             this.numCol = 10;
             this.numRow = 10;
             this.pathSize = 12;
+            this.pathNumber = 5;
         }
         else if (this.hard == 3) {
             //困难
             this.numCol = 14;
             this.numRow = 14;
             this.pathSize = 12;
+            this.pathNumber = 7;
         }
         this.splitter = this.numCol / 2;
         //加载单元格
         this.Load();
-        while (this.pathArray.length <= 3) {
+        while (this.pathArray.length <= this.pathNumber) {
             this.Reset();
             //生成
             this.Generate();
@@ -1649,7 +1652,7 @@ class CNumberlinkGrid extends CChessGridBase {
         for (let i = 0; i < 8; i++) {
             let ptArr = CArrayHelper.GetRandQueue(arr1, 2);
             let dist2 = this.DistancePoint(ptArr[0], ptArr[1]);
-            if (dist2 > dist1) {
+            if (dist2 > dist1 && dist2 <= 12) {
                 //arr3.push(ptArr);
                 arr2 = ptArr;
                 dist1 = dist2;
