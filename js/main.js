@@ -422,7 +422,7 @@ function DrawSlitherlink(x0, y0, chess1) {
 function DrawNumberlink(x0, y0, chess1) {
     let x1 = x0;
     let y1 = y0;
-    //m_drawBoard.DrawSquare(x0, y0, m_BlockCellWidth * chess1.numRow, "grey", "dash");
+    m_drawBoard.DrawSquare(x0, y0, m_BlockCellWidth * chess1.numRow);
     for (let y = 0; y < chess1.numRow; y++) {
         for (let x = 0; x < chess1.numCol; x++) {
             let str1 = "";
@@ -441,8 +441,10 @@ function DrawNumberlink(x0, y0, chess1) {
                 m_drawBoard.DrawSquare(x1, y1, m_BlockCellWidth);
                 m_drawBoard.WriteText(str1, x1 + 0.12 * m_BlockCellWidth, y1 + 0.7 * m_BlockCellWidth, 0.65);
             }else{
-                //绘制方格
-                m_drawBoard.DrawSquare(x1, y1, m_BlockCellWidth, "grey", "dash");
+                //绘制小方格
+                let w1 = m_BlockCellWidth;
+                let w2 = m_BlockCellWidth*0.05;
+                m_drawBoard.DrawSquare(x1+0.5*(w1-w2), y1+0.5*(w1-w2), w2);
             }
             
             x1 = x1 + m_BlockCellWidth;
