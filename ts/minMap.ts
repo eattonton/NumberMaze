@@ -1713,7 +1713,7 @@ class CNumberlinkGrid extends CChessGridBase {
     private splitter: number = 12;
     private pathArray: Array<any> = [];
     private bSuccessPath: boolean = false;  //是否找到了路径
-    private pathNumber:number = 3;
+    private pathNumber: number = 3;
     public constructor() {
         super();
     }
@@ -1747,26 +1747,27 @@ class CNumberlinkGrid extends CChessGridBase {
         this.hard = hard;
         this.numCol = 6;
         this.numRow = 6;
-        this.pathSize = 8;
+        this.pathSize = 12;
+        this.pathNumber = 4;
 
         if (this.hard == 2) {
             //中等
             this.numCol = 10;
             this.numRow = 10;
-            this.pathSize = 12;
-            this.pathNumber = 5;
+            this.pathSize = 20;
+            this.pathNumber = 7;
         } else if (this.hard == 3) {
             //困难
             this.numCol = 14;
             this.numRow = 14;
-            this.pathSize = 12;
+            this.pathSize = 28;
             this.pathNumber = 7;
         }
         this.splitter = this.numCol / 2;
         //加载单元格
         this.Load();
 
-        while (this.pathArray.length <= this.pathNumber) {
+        while (this.pathArray.length < this.pathNumber) {
             this.Reset();
             //生成
             this.Generate();
@@ -1781,24 +1782,29 @@ class CNumberlinkGrid extends CChessGridBase {
         let blockIdxX = this.GetSplitterArray(this.numCol, this.splitter);
         let blockIdxY = this.GetSplitterArray(this.numRow, this.splitter);
         //生成路径
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 1000; i++) {
             //1.获得 空白的格子
             let emptyIdx: Array<number> = this.GetEmptyBoxArray();
             if (emptyIdx.length < 2) break;
             let id: number = i + 1;
-            //2.随机获得两个
-            let randIdx = [];
-            if (this.hard == 1) {
-                //按照块 定位 点 
-                randIdx = this.GetRandIndexByBlock(CArrayHelper.GetRandQueue(emptyIdx, emptyIdx.length), blockIdxX, blockIdxY);
-            } else {
-                //随机获得 距离最长的 两个点
-                randIdx = this.GetRandIndexByMaxDistance(emptyIdx);
-            }
+            // //2.随机获得两个
+            // let randIdx = [];
+            // if (this.hard == 1) {
+            //     //按照块 定位 点 
+            //     randIdx = this.GetRandIndexByBlock(CArrayHelper.GetRandQueue(emptyIdx, emptyIdx.length), blockIdxX, blockIdxY);
+            // } else {
+            //     //随机获得 距离最长的 两个点
+            //     randIdx = this.GetRandIndexByMaxDistance(emptyIdx);
+            // }
 
-            if (randIdx.length < 2) continue;
+            // if (randIdx.length < 2) continue;
             //3.生成路径
-            let arr1 = this.CreateOnePath(id, randIdx[0], randIdx[1]);
+            //let arr1 = this.CreateOnePath(id, randIdx[0], randIdx[1]);
+            //调整长度
+            this.pathSize = this.pathArray.length * 3.0 + 4;
+            //随机选择一个位置
+            let emptyp1 = CArrayHelper.RandomInt(0, emptyIdx.length - 1);
+            let arr1 = this.CreateOnePath(id, emptyIdx[emptyp1], -1);
             if (this.CheckValidPath(arr1)) {
                 this.pathArray.push(arr1);
                 this.SetCellVisible(id, ++id2, arr1);
@@ -1854,7 +1860,7 @@ class CNumberlinkGrid extends CChessGridBase {
         for (let i = 0; i < 8; i++) {
             let ptArr = CArrayHelper.GetRandQueue(arr1, 2);
             let dist2 = this.DistancePoint(ptArr[0], ptArr[1]);
-            if(dist2 > dist1 && dist2 <= 12){
+            if (dist2 > dist1 && dist2 <= 12) {
                 //arr3.push(ptArr);
                 arr2 = ptArr;
                 dist1 = dist2;
@@ -1950,27 +1956,36 @@ class CNumberlinkGrid extends CChessGridBase {
     //创建一个路径
     private CreateOnePath(id: number, p1: number, p2: number): Array<number> {
         let arr1: Array<number> = [p1];
-        this.bSuccessPath = false;
-        let arr2: Array<Array<number>> = this.CreatePaths(p1, p2, arr1);
-
-        if (this.bSuccessPath && arr2 && arr2.length > 0) {
-            //查找最短的一条路径
-            //let arr3 = this.FindShortPath(arr2);
-            //随机选择一条
-            //let arr3 = this.FindRandPath(arr2);
-            let arr3 = arr2[0];
-
-            if (arr3) {
-                for (let idx of arr3) {
-                    let c1: Cell = this.GetAtCellByIndex(idx);
-                    c1.id = id;
-                }
-            }
-
-            return arr3;
+        this.CreatePathWithRand(p1, arr1);
+        //if (this.CheckValidPath(arr1)) {
+        for (let idx of arr1) {
+            let c1: Cell = this.GetAtCellByIndex(idx);
+            c1.id = id;
         }
 
-        return [];
+        return arr1;
+        // }
+        // this.bSuccessPath = false;
+        // let arr2: Array<Array<number>> = this.CreatePathsWithEndPoints(p1, p2, arr1);
+
+        // if (this.bSuccessPath && arr2 && arr2.length > 0) {
+        //     //查找最短的一条路径
+        //     //let arr3 = this.FindShortPath(arr2);
+        //     //随机选择一条
+        //     //let arr3 = this.FindRandPath(arr2);
+        //     let arr3 = arr2[0];
+
+        //     if (arr3) {
+        //         for (let idx of arr3) {
+        //             let c1: Cell = this.GetAtCellByIndex(idx);
+        //             c1.id = id;
+        //         }
+        //     }
+
+        //     return arr3;
+        // }
+
+        //return [];
     }
 
     //随机返回一个路径
@@ -2005,8 +2020,48 @@ class CNumberlinkGrid extends CChessGridBase {
         return arr3;
     }
 
-    //生成路径
-    private CreatePaths(p1: number, p2: number, arr1: Array<number>): Array<Array<number>> {
+    //随机生成一条路径
+    private CreatePathWithRand(p1: number, arr1: Array<number>): void {
+        //获得p1所在位置的格
+        let c1: Cell = this.GetAtCellByIndex(p1);
+        //随机生成四个方向
+        let arrDirection = CArrayHelper.GetRandQueue(null, 4);
+        for (let idir of arrDirection) {
+            //得到下一个单位格
+            let cNext = this.NextCell(c1, idir);
+            let pNext: number = this.GetPositionByCell(cNext);
+            //3.判断能不能加
+            if (cNext && cNext.id < 0 && pNext >= 0 && arr1.indexOf(pNext) < 0 && pNext != p1) {
+                //判断是否在同一个方向，保证路径不粘合
+                let bNear = false;
+                for (let j = 0; j < arr1.length - 1; j++) {
+                    let dist2 = this.DistancePoint(arr1[j], pNext);
+                    if (dist2 <= 1) {
+                        bNear = true;
+                        break;
+                    }
+                }
+                //相邻的不符合
+                if(bNear){
+                    continue;
+                }
+
+                //把点添加到当前路径
+                arr1.push(pNext);
+                if (arr1.length < this.pathSize) {
+                    //表示还没结束
+                    this.CreatePathWithRand(pNext, arr1);
+                }
+
+                break;
+            }
+
+        }
+
+    }
+
+    //根据 两个端点生成路径
+    private CreatePathsWithEndPoints(p1: number, p2: number, arr1: Array<number>): Array<Array<number>> {
         let arr2: Array<Array<number>> = [];
 
         let c1: Cell = this.GetAtCellByIndex(p1);
@@ -2030,7 +2085,7 @@ class CNumberlinkGrid extends CChessGridBase {
                     break;
                 } else if (arr3.length <= this.pathSize) {
                     //表示还没结束
-                    arrNext = this.CreatePaths(pNext, p2, arr3);
+                    arrNext = this.CreatePathsWithEndPoints(pNext, p2, arr3);
                 }
             }
 

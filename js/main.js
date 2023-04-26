@@ -191,7 +191,7 @@ function CreateA4(category) {
     } else if (category == 20) {
         //数连(困难)
         m_hard = 3;
-        m_BlockCellWidth = 0.85;
+        m_BlockCellWidth = 0.8;
         CreateOneBoxNumberlink(4.5, 4.2);
         CreateOneBoxNumberlink(4.5, 17.2);
     } 
