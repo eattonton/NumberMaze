@@ -1550,22 +1550,20 @@ class CNumberlinkGrid extends CChessGridBase {
         this.hard = hard;
         this.numCol = 6;
         this.numRow = 6;
-        this.splitter = 3;
         this.pathSize = 10;
         if (this.hard == 2) {
             //中等
             this.numCol = 10;
             this.numRow = 10;
-            this.splitter = 5;
             this.pathSize = 12;
         }
         else if (this.hard == 3) {
             //困难
-            this.numCol = 12;
-            this.numRow = 12;
-            this.splitter = 6;
+            this.numCol = 14;
+            this.numRow = 14;
             this.pathSize = 14;
         }
+        this.splitter = this.numCol / 2;
         //加载单元格
         this.Load();
         while (this.pathArray.length <= 3) {
@@ -1601,11 +1599,24 @@ class CNumberlinkGrid extends CChessGridBase {
                 continue;
             //3.生成路径
             let arr1 = this.CreateOnePath(id, randIdx[0], randIdx[1]);
-            if (arr1) {
+            if (this.CheckValidPath(arr1)) {
                 this.pathArray.push(arr1);
                 this.SetCellVisible(id, ++id2, arr1);
             }
         }
+    }
+    //判断此路径是否有效
+    CheckValidPath(arr1) {
+        if (arr1 && arr1.length > 2) {
+            //判断前后两个位置的距离，不能相邻
+            let pt1 = this.GetRowColumn(arr1[0]);
+            let pt2 = this.GetRowColumn(arr1[arr1.length - 1]);
+            let dist2 = (pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]);
+            if (dist2 > 2) {
+                return true;
+            }
+        }
+        return false;
     }
     //设置单元格是否显示 只显示两端
     SetCellVisible(id, id2, arrPath) {
