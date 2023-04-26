@@ -439,7 +439,7 @@ function DrawNumberlink(x0, y0, chess1) {
             //绘制 
             if(str1 != ""){
                 m_drawBoard.DrawSquare(x1, y1, m_BlockCellWidth);
-                m_drawBoard.WriteText(str1, x1 + 0.18 * m_BlockCellWidth, y1 + 0.7 * m_BlockCellWidth, 0.65);
+                m_drawBoard.WriteText(str1, x1 + 0.12 * m_BlockCellWidth, y1 + 0.7 * m_BlockCellWidth, 0.65);
             }else{
                 //绘制方格
                 m_drawBoard.DrawSquare(x1, y1, m_BlockCellWidth, "grey", "dash");

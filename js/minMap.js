@@ -1739,7 +1739,7 @@ class CNumberlinkGrid extends CChessGridBase {
         let arr1 = [p1];
         this.bSuccessPath = false;
         let arr2 = this.CreatePaths(p1, p2, arr1);
-        if (arr2 && arr2.length > 0) {
+        if (this.bSuccessPath && arr2 && arr2.length > 0) {
             //查找最短的一条路径
             //let arr3 = this.FindShortPath(arr2);
             //随机选择一条
@@ -1807,10 +1807,6 @@ class CNumberlinkGrid extends CChessGridBase {
                 else if (arr3.length <= this.pathSize) {
                     //表示还没结束
                     arrNext = this.CreatePaths(pNext, p2, arr3);
-                    // if(arrNext.length > 15){
-                    //     this.bSuccessPath = true;
-                    //     break;
-                    // }
                 }
             }
             //记录获得的点
