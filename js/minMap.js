@@ -1523,6 +1523,7 @@ class CNumberlinkGrid extends CChessGridBase {
         this.pathSize = 12;
         this.splitter = 12;
         this.pathArray = [];
+        this.bSuccessPath = false; //是否找到了路径
     }
     Load() {
         for (let y = 0; y < this.numRow; y++) {
@@ -1544,13 +1545,14 @@ class CNumberlinkGrid extends CChessGridBase {
                 this.boxs[y][x].show = false;
             }
         }
+        this.bSuccessPath = false;
     }
     //设置难度 并 创建 
     SetHard(hard) {
         this.hard = hard;
         this.numCol = 6;
         this.numRow = 6;
-        this.pathSize = 10;
+        this.pathSize = 8;
         if (this.hard == 2) {
             //中等
             this.numCol = 10;
@@ -1612,7 +1614,7 @@ class CNumberlinkGrid extends CChessGridBase {
             let pt1 = this.GetRowColumn(arr1[0]);
             let pt2 = this.GetRowColumn(arr1[arr1.length - 1]);
             let dist2 = (pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]);
-            if (dist2 > 2) {
+            if (dist2 > 4) {
                 return true;
             }
         }
@@ -1640,7 +1642,7 @@ class CNumberlinkGrid extends CChessGridBase {
     GetRandIndexByMaxDistance(arr1) {
         let arr2 = [];
         let arr3 = [];
-        for (let i = 0; i < 1000; i++) {
+        for (let i = 0; i < 1100; i++) {
             arr3.push(CArrayHelper.GetRandQueue(arr1, 2));
         }
         let dist = 0;
@@ -1732,25 +1734,30 @@ class CNumberlinkGrid extends CChessGridBase {
     //创建一个路径
     CreateOnePath(id, p1, p2) {
         let arr1 = [p1];
+        this.bSuccessPath = false;
         let arr2 = this.CreatePaths(p1, p2, arr1);
-        //查找最短的一条路径
-        //let arr3 = this.FindShortPath(arr2);
-        //随机选择一条
-        let arr3 = this.FindRandPath(arr2);
-        if (arr3) {
-            for (let idx of arr3) {
-                let c1 = this.GetAtCellByIndex(idx);
-                c1.id = id;
+        if (arr2 && arr2.length > 0) {
+            //查找最短的一条路径
+            //let arr3 = this.FindShortPath(arr2);
+            //随机选择一条
+            //let arr3 = this.FindRandPath(arr2);
+            let arr3 = arr2[0];
+            if (arr3) {
+                for (let idx of arr3) {
+                    let c1 = this.GetAtCellByIndex(idx);
+                    c1.id = id;
+                }
             }
+            return arr3;
         }
-        return arr3;
+        return [];
     }
     //随机返回一个路径
     FindRandPath(arr1) {
         let arr3 = null;
         let arr4 = [];
         for (let arr2 of arr1) {
-            if (arr2.length > 4 && arr2.length <= this.pathSize) {
+            if (arr2.length > this.pathSize - 4 && arr2.length <= this.pathSize) {
                 arr4.push(arr2);
             }
         }
@@ -1765,7 +1772,7 @@ class CNumberlinkGrid extends CChessGridBase {
         let pathLen = 1000;
         let arr3 = null;
         for (let arr2 of arr1) {
-            if (arr2.length < pathLen && arr2.length > 4 && arr2.length <= this.pathSize) {
+            if (arr2.length < pathLen && arr2.length > this.pathSize - 4 && arr2.length <= this.pathSize) {
                 arr3 = arr2;
                 pathLen = arr2.length;
             }
@@ -1776,84 +1783,36 @@ class CNumberlinkGrid extends CChessGridBase {
     CreatePaths(p1, p2, arr1) {
         let arr2 = [];
         let c1 = this.GetAtCellByIndex(p1);
+        let arrDirection = CArrayHelper.GetRandQueue(null, 4);
         //1. 获得 下一个有效的单元格位置
-        let cUp = this.NextCell(c1, CellDirection.up);
-        let cDown = this.NextCell(c1, CellDirection.down);
-        let cLeft = this.NextCell(c1, CellDirection.left);
-        let cRight = this.NextCell(c1, CellDirection.right);
-        let pUp = this.GetPositionByCell(cUp);
-        let pDown = this.GetPositionByCell(cDown);
-        let pLeft = this.GetPositionByCell(cLeft);
-        let pRight = this.GetPositionByCell(cRight);
-        let arrUp = [];
-        let arrDown = [];
-        let arrLeft = [];
-        let arrRight = [];
-        //判断能不能加
-        if (cUp && cUp.id < 0 && pUp >= 0 && arr1.indexOf(pUp) < 0 && pUp != p1) {
-            //添加到一个新的路径
-            let arr3 = [...arr1];
-            arr3.push(pUp);
-            if (pUp == p2) {
-                //结束
-                arr2.push(arr3);
+        for (let idir of arrDirection) {
+            //2.得到下一个单位格
+            let cNext = this.NextCell(c1, idir);
+            let pNext = this.GetPositionByCell(cNext);
+            let arrNext = [];
+            //3.判断能不能加
+            if (!this.bSuccessPath && cNext && cNext.id < 0 && pNext >= 0 && arr1.indexOf(pNext) < 0 && pNext != p1) {
+                //添加到一个新的路径
+                let arr3 = [...arr1];
+                arr3.push(pNext);
+                if (pNext == p2) {
+                    //结束
+                    arr2.push(arr3);
+                    this.bSuccessPath = true;
+                    break;
+                }
+                else if (arr3.length <= this.pathSize) {
+                    //表示还没结束
+                    arrNext = this.CreatePaths(pNext, p2, arr3);
+                }
             }
-            else if (arr3.length <= this.pathSize) {
-                //表示还没结束
-                arrUp = this.CreatePaths(pUp, p2, arr3);
+            //记录获得的点
+            for (let item1 of arrNext) {
+                arr2.push(item1);
             }
-        }
-        if (cDown && cDown.id < 0 && pDown >= 0 && arr1.indexOf(pDown) < 0 && pDown != p1) {
-            //添加到一个新的路径
-            let arr3 = [...arr1];
-            arr3.push(pDown);
-            if (pDown == p2) {
-                //结束
-                arr2.push(arr3);
+            if (this.bSuccessPath) {
+                break;
             }
-            else if (arr3.length <= this.pathSize) {
-                //表示还没结束
-                arrDown = this.CreatePaths(pDown, p2, arr3);
-            }
-        }
-        if (cLeft && cLeft.id < 0 && pLeft >= 0 && arr1.indexOf(pLeft) < 0 && pLeft != p1) {
-            //添加到一个新的路径
-            let arr3 = [...arr1];
-            arr3.push(pLeft);
-            if (pLeft == p2) {
-                //结束
-                arr2.push(arr3);
-            }
-            else if (arr3.length <= this.pathSize) {
-                //表示还没结束
-                arrLeft = this.CreatePaths(pLeft, p2, arr3);
-            }
-        }
-        if (cRight && cRight.id < 0 && pRight >= 0 && arr1.indexOf(pRight) < 0 && pRight != p1) {
-            //添加到一个新的路径
-            let arr3 = [...arr1];
-            arr3.push(pRight);
-            if (pRight == p2) {
-                //结束
-                arr2.push(arr3);
-            }
-            else if (arr3.length <= this.pathSize) {
-                //表示还没结束
-                arrRight = this.CreatePaths(pRight, p2, arr3);
-            }
-        }
-        //记录获得的点
-        for (let item1 of arrUp) {
-            arr2.push(item1);
-        }
-        for (let item1 of arrDown) {
-            arr2.push(item1);
-        }
-        for (let item1 of arrLeft) {
-            arr2.push(item1);
-        }
-        for (let item1 of arrRight) {
-            arr2.push(item1);
         }
         return arr2;
     }
