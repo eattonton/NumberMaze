@@ -1563,7 +1563,7 @@ class CNumberlinkGrid extends CChessGridBase {
             //困难
             this.numCol = 14;
             this.numRow = 14;
-            this.pathSize = 14;
+            this.pathSize = 12;
         }
         this.splitter = this.numCol / 2;
         //加载单元格
@@ -1611,14 +1611,18 @@ class CNumberlinkGrid extends CChessGridBase {
     CheckValidPath(arr1) {
         if (arr1 && arr1.length > 2) {
             //判断前后两个位置的距离，不能相邻
-            let pt1 = this.GetRowColumn(arr1[0]);
-            let pt2 = this.GetRowColumn(arr1[arr1.length - 1]);
-            let dist2 = (pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]);
-            if (dist2 > 4) {
+            let dist2 = this.DistancePoint(arr1[0], arr1[arr1.length - 1]);
+            if (dist2 > 2) {
                 return true;
             }
         }
         return false;
+    }
+    DistancePoint(pos1, pos2) {
+        let pt1 = this.GetRowColumn(pos1);
+        let pt2 = this.GetRowColumn(pos2);
+        let dist2 = (pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]);
+        return Math.sqrt(dist2);
     }
     //设置单元格是否显示 只显示两端
     SetCellVisible(id, id2, arrPath) {
@@ -1642,17 +1646,19 @@ class CNumberlinkGrid extends CChessGridBase {
     GetRandIndexByMaxDistance(arr1) {
         let arr2 = [];
         let arr3 = [];
-        for (let i = 0; i < 1100; i++) {
-            arr3.push(CArrayHelper.GetRandQueue(arr1, 2));
+        for (let i = 0; i < 5; i++) {
+            let ptArr = CArrayHelper.GetRandQueue(arr1, 2);
+            let dist2 = this.DistancePoint(ptArr[0], ptArr[1]);
+            if (dist2 > 3) {
+                arr3.push(ptArr);
+            }
         }
-        let dist = 0;
+        let dist1 = 0;
         for (let i = 0; i < arr3.length; i++) {
-            let arr4 = arr3[i];
-            let pt1 = this.GetRowColumn(arr4[0]);
-            let pt2 = this.GetRowColumn(arr4[1]);
-            let dist2 = (pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]);
-            if (dist2 > dist) {
-                arr2 = arr4;
+            let dist2 = this.DistancePoint(arr3[i][0], arr3[i][1]);
+            if (dist2 > dist1) {
+                arr2 = arr3[i];
+                dist1 = dist2;
             }
         }
         return arr2;
@@ -1804,12 +1810,17 @@ class CNumberlinkGrid extends CChessGridBase {
                 else if (arr3.length <= this.pathSize) {
                     //表示还没结束
                     arrNext = this.CreatePaths(pNext, p2, arr3);
+                    // if(arrNext.length > 15){
+                    //     this.bSuccessPath = true;
+                    //     break;
+                    // }
                 }
             }
             //记录获得的点
             for (let item1 of arrNext) {
                 arr2.push(item1);
             }
+            //如果存在 就结束
             if (this.bSuccessPath) {
                 break;
             }
