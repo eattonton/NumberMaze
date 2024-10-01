@@ -1868,3 +1868,84 @@ class CNumberlinkGrid extends CChessGridBase {
         return arr2;
     }
 }
+
+//幻方
+class CMagicSquareGrid extends CChessGridBase {
+    constructor() {
+        super();
+        this.numCol = 3;
+        this.numRow = 3;
+        this.idxArr = [2,7,6,9,5,1,4,3,8];
+        this.blankMax = 6;
+    }
+    SetHard(hard) {
+        this.hard = hard;
+        if (hard == 2) {
+            this.numRow = 5;
+            this.numCol = 5;
+            this.idxArr = [3,16,9,22,15,20,8,21,14,2,7,25,13,1,19,24,12,5,18,6,11,4,17,10,23];
+            this.blankMax = 15;
+        }
+        for (let y = 0; y < this.numRow; y++) {
+            this.boxs.push([]);
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y].push(new Cell());
+                this.boxs[y][x].x = x; //column
+                this.boxs[y][x].y = y; //row
+            }
+        }
+        this.CreateCells();
+    }
+    CreateCells() {
+        let num = this.numRow * this.numCol;
+        let arr = this.GenerateOrderCells();
+        let arr1 = [];
+        for(let idx of this.idxArr){
+            arr1.push(arr[idx-1]);
+        } 
+        //随机生成不需要显示的数
+        let blankNum = CArrayHelper.RandomInt(this.blankMax-3, this.blankMax);
+        let arr2 = CArrayHelper.GetRandQueueInRange(blankNum, 0, num-1);
+        for (let y = 0; y < this.numRow; y++) {
+            for (let x = 0; x < this.numCol; x++) {
+                this.boxs[y][x].id = arr1[super.GetPosition(x, y)];
+                if (arr2.indexOf(y*this.numRow + x) >= 0) {
+                    this.boxs[y][x].id = -1;
+                }
+            }
+        }
+    }
+
+    GenerateOrderCells() {
+        let arr = [];
+        do {
+            let seed = CArrayHelper.RandomInt(2*this.numCol, 4*this.numCol);
+            let cnum = CArrayHelper.RandomInt(seed, 3*seed);
+            let su = CArrayHelper.RandomInt(1, parseInt(seed / 2) - 1);
+            let sv = CArrayHelper.RandomInt(1, parseInt(seed / 2) - 1);
+            let halfSize = parseInt(this.numRow/2);
+            arr = [];
+            for(let i=-halfSize; i<=halfSize;i++){
+                for(let j=-halfSize; j<=halfSize;j++){
+                    let val1 = cnum + i*sv + j*su;
+                    arr.push(val1);
+                }
+            }
+        } while (!this.CheckValid(arr));
+        return arr;
+    }
+
+    CheckValid(arr) {
+        const countMap = {};
+        for (let i = 0; i < arr.length; i++) {
+            if(arr[i] <= 0){
+                return false;
+            }
+            if (countMap[arr[i]]) {
+                return false;
+            }
+            countMap[arr[i]] = 1;
+        }
+        return true;
+    }
+}

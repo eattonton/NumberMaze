@@ -61,6 +61,8 @@ function CreateA4(category) {
         m_drawBoard.WriteText("数 回", 8.0, 2.0, 1.4);
     }else if (category <= 20) {
         m_drawBoard.WriteText("数 连", 8.0, 2.0, 1.4);
+    }else if (category <= 22) {
+        m_drawBoard.WriteText("幻 方", 8.0, 2.0, 1.4);
     }
 
     if (category == 1) {
@@ -194,7 +196,25 @@ function CreateA4(category) {
         m_BlockCellWidth = 0.8;
         CreateOneBoxNumberlink(4.5, 4.2);
         CreateOneBoxNumberlink(4.5, 17.2);
-    } 
+    } else if(category == 21){
+        //幻方(3x3)
+        m_hard = 1;
+        m_BlockCellWidth = 1.8;
+        CreateOneBoxMagicSquare(2.5, 6.5);
+        CreateOneBoxMagicSquare(11.5, 6.5);
+        CreateOneBoxMagicSquare(2.5, 14.5);
+        CreateOneBoxMagicSquare(11.5, 14.5);
+        CreateOneBoxMagicSquare(2.5, 22.5);
+        CreateOneBoxMagicSquare(11.5, 22.5);
+    } else if(category == 22){
+        //幻方(5x5)
+        m_hard = 2;
+        m_BlockCellWidth = 1.5;
+        CreateOneBoxMagicSquare(1.5, 6.5);
+        CreateOneBoxMagicSquare(11.5, 6.5);
+        CreateOneBoxMagicSquare(1.5, 18.5);
+        CreateOneBoxMagicSquare(11.5, 18.5);
+    }
 
     //贴图
     loadImg0();
@@ -251,6 +271,13 @@ function CreateOneBoxNumberlink(x, y){
     chess1.SetHard(m_hard);
     //3.绘制表格
     DrawNumberlink(x, y, chess1);
+}
+
+//生成一个幻方
+function CreateOneBoxMagicSquare(x,y){
+    let chess1 = new CMagicSquareGrid();
+    chess1.SetHard(m_hard);
+    DrawMagicSquareGrid(x, y, chess1);
 }
 
 //绘制数字地雷方格
@@ -447,6 +474,30 @@ function DrawNumberlink(x0, y0, chess1) {
                 m_drawBoard.DrawSquare(x1+0.5*(w1-w2), y1+0.5*(w1-w2), w2);
             }
             
+            x1 = x1 + m_BlockCellWidth;
+        }
+        y1 = y1 + m_BlockCellWidth;
+        x1 = x0;
+    }
+}
+
+//绘制幻方表（Magic Square）
+function DrawMagicSquareGrid(x0, y0, chess1) {
+    let x1 = x0;
+    let y1 = y0;
+    //显示地雷数
+    m_drawBoard.WriteText("时间______ ", x1, y1 - 0.8, 0.8);
+    for (let y = 0; y < chess1.numRow; y++) {
+        for (let x = 0; x < chess1.numCol; x++) {
+            //1.绘制方格
+            m_drawBoard.DrawSquare(x1, y1, m_BlockCellWidth);
+            //2.显示数字
+            let c1 = chess1.boxs[y][x];
+            if (c1.id > 0) {
+                let str1 = c1.id + "";
+                //3.绘制文字
+                m_drawBoard.WriteText(str1, x1 + 0.2 * m_BlockCellWidth, y1 + 0.7 * m_BlockCellWidth, 0.8);
+            }
             x1 = x1 + m_BlockCellWidth;
         }
         y1 = y1 + m_BlockCellWidth;
